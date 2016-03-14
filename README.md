@@ -1,9 +1,11 @@
 # ImageProcessing
 
 Dependencies:
+
 C++
 - [OpenCV](http://opencv.org)
 - [Voro++](http://math.lbl.gov/voro++/)
+
 Python
 - [SciPy](http://www.scipy.org)
 - [NumPy](http://www.numpy.org)

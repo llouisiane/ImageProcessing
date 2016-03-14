@@ -2,12 +2,12 @@
 
 Dependencies:
 C++
--[OpenCV](http://opencv.org)
--[Voro++](http://math.lbl.gov/voro++/)
+- [OpenCV](http://opencv.org)
+- [Voro++](http://math.lbl.gov/voro++/)
 Python
--[SciPy](http://www.scipy.org)
--[NumPy](http://www.numpy.org)
--[Matplotlib](http://matplotlib.org/)
+- [SciPy](http://www.scipy.org)
+- [NumPy](http://www.numpy.org)
+- [Matplotlib](http://matplotlib.org/)
 
 ## imageprocessing
 detects bacteria, outputs positions, angles and sizes of rectangles

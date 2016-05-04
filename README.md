@@ -13,8 +13,10 @@ Python
 
 ## imageprocessing
 detects bacteria, outputs positions, angles and sizes of rectangles
+
 [Raw data](https://www.youtube.com/watch?v=XVsikfZki0Q) in real time.
-[Segmented (after imageprocessing)](https://www.youtube.com/watch?v=i4Po9AJZ46s).
+
+[![Segmented](http://img.youtube.com/vi/i4Po9AJZ46s/0.jpg)](https://www.youtube.com/watch?v=i4Po9AJZ46s)
 
 ## tracking
 establishes frame-to-frame [trajectories](https://www.youtube.com/watch?v=vGFfmc9co-Y)

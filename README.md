@@ -19,7 +19,9 @@ detects bacteria, outputs positions, angles and sizes of rectangles
 [![Segmented](http://img.youtube.com/vi/i4Po9AJZ46s/0.jpg)](https://www.youtube.com/watch?v=i4Po9AJZ46s)
 
 ## tracking
-establishes frame-to-frame [trajectories](https://www.youtube.com/watch?v=vGFfmc9co-Y)
+establishes frame-to-frame trajectories
+
+[![Tracked](http://img.youtube.com/vi/vGFfmc9co-Y/0.jpg)](https://www.youtube.com/watch?v=vGFfmc9co-Y)
 
 ### ids_generate
 assigns unique ids to particles

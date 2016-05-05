@@ -1,11 +1,10 @@
-// 2015-02-09
-
 #include <iostream>
+#include <cstdio>
 #include <fstream>
 #include <map>
 #include <tuple>
-
-#include <unistd.h> //chdir
+#include <iomanip>
+#include <sstream>
 
 #include "core.hpp"
 #include "highgui.hpp"
@@ -24,7 +23,6 @@ const int GROUP_MODE_C = 3;
 const int GROUP_MODE = GROUP_MODE_C;
 
 typedef double real; //float, double, ...
-const real PI = 3.141592653589793238463;
 
 typedef Vector2DT<real> Vector;
 typedef std::vector<cv::RotatedRect> RectangleList;
@@ -38,7 +36,7 @@ const cv::Scalar GREEN = cv::Scalar(0, 255, 0);
 const cv::Scalar YELLOW = cv::Scalar(0, 255, 255);
 const cv::Scalar ORANGE = cv::Scalar(0, 128, 255);
 
-void drawRotatedRectangle(cv::Mat &image, const cv::RotatedRect& rect, const cv::Scalar& color, bool filled = false)
+void drawRotatedRectangle(cv::Mat &image, const cv::RotatedRect& rect, const cv::Scalar& color, bool filled = false, unsigned int thickness = 1)
 {
     cv::Point2f vertices2f[4];
     cv::Point vertices[4];
@@ -57,7 +55,7 @@ void drawRotatedRectangle(cv::Mat &image, const cv::RotatedRect& rect, const cv:
     {
         for (int i = 0; i < 4; ++i)
         {
-            cv::line(image, vertices2f[i], vertices2f[(i+1)%4], color);
+            cv::line(image, vertices2f[i], vertices2f[(i+1)%4], color, thickness);
         }
     }
 }
@@ -266,7 +264,7 @@ bool AreRectanglesInSameParticle(const cv::RotatedRect &rect1, const cv::Rotated
         return false;
     }
     //angle difference is low (already first if), but perpendicular distance is high; idea: U - shaped 3 particle contours have to be differenciated
-    Vector n(std::sin(rect1.angle/360.*2.*PI), -std::cos(rect1.angle/360.*2.*PI)); //assume rect1.angle \approx rect2.angle
+    Vector n(std::sin(rect1.angle/360.*2.*M_PI), -std::cos(rect1.angle/360.*2.*M_PI)); //assume rect1.angle \approx rect2.angle
     real perp_center_distance = (v - n*(n*v)).Norm();
 
     /*cv::Mat img_test = cv::Mat(1024, 1024, CV_8UC1, WHITE);
@@ -325,7 +323,7 @@ std::vector<RectangleList> GroupParticles(const RectangleList &rects, real max_a
             }
             else if (GROUP_MODE == GROUP_MODE_B) //MODE b) test each rectangle with each other: if any two are found to not belong to the same particle, it is considered as such
             {
-                for (int j = 0; j < ret[i].size(); ++j)
+                for (unsigned int j = 0; j < ret[i].size(); ++j)
                 {
                     if (AreRectanglesInSameParticle(rect, ret[i][j], max_allowed_angle_diff, max_allowed_center_diff_factor, max_allowed_perp_center_diff_factor))
                     {
@@ -341,7 +339,7 @@ std::vector<RectangleList> GroupParticles(const RectangleList &rects, real max_a
             }
             else if (GROUP_MODE == GROUP_MODE_C) //MODE c) test each rectangle with each other: if all pairs are found to not belong to the same particle, it is considered as such
             {
-                for (int j = 0; j < ret[i].size(); ++j)
+                for (unsigned int j = 0; j < ret[i].size(); ++j)
                 {
                     if (AreRectanglesInSameParticle(rect, ret[i][j], max_allowed_angle_diff, max_allowed_center_diff_factor, max_allowed_perp_center_diff_factor))
                     {
@@ -370,8 +368,8 @@ std::vector<RectangleList> GroupParticles(const RectangleList &rects, real max_a
 cv::Rect_<float> BoundingRect(const cv::RotatedRect &rect1, const cv::RotatedRect &rect2) //RotatedRect is float only
 {
     std::vector<Vector> points(8);
-    real a1 = rect1.angle/360.*2.*PI;
-    real a2 = rect2.angle/360.*2.*PI;
+    real a1 = rect1.angle/360.*2.*M_PI;
+    real a2 = rect2.angle/360.*2.*M_PI;
     Vector c1 = Vector(rect1.center.x, rect1.center.y);
     Vector c2 = Vector(rect2.center.x, rect2.center.y);
     Vector vh1 = Vector(std::sin(a1), -std::cos(a1)) * rect1.size.height/2.;
@@ -457,13 +455,13 @@ std::vector<Contour> MakeContoursFromRectangles(const cv::Mat &normalized, const
 
     cv::Mat customcontourimage;
     drawWhiteRectanglesInBlackPicture(rects, customcontourimage, rows, cols);
-    cv::imwrite("test_FilledRects.png", customcontourimage);
+    ///cv::imwrite("test_FilledRects.png", customcontourimage);
 
     cv::findContours(customcontourimage, contours, cv::noArray(), CV_RETR_LIST, CV_CHAIN_APPROX_SIMPLE);
     cv::Mat img_with_contours = normalized.clone();
     cvtColor(img_with_contours, img_with_contours, CV_GRAY2BGR);
     cv::drawContours(img_with_contours, contours, -1, RED);
-    cv::imwrite("test_Orig_wContours.png", img_with_contours);
+    ///cv::imwrite("test_Orig_wContours.png", img_with_contours);
 
     return contours;
 }
@@ -506,14 +504,14 @@ unsigned int FindNonSingleGroups(const std::vector<RectangleList> &groups, real 
     return num_not_single;
 }
 
-cv::Mat DrawRotatedRectList(cv::Mat &image, const RectangleList &rects, const cv::Scalar &color)
+cv::Mat DrawRotatedRectList(cv::Mat &image, const RectangleList &rects, const cv::Scalar &color, unsigned int thickness = 1)
 {
     cv::Mat output = image.clone();
     cvtColor(output, output, CV_GRAY2BGR);
 
     for (auto rect : rects)
     {
-        drawRotatedRectangle(output, rect, color, false);
+        drawRotatedRectangle(output, rect, color, false, thickness);
     }
 
     return output;
@@ -568,12 +566,46 @@ void test_PrintIterable(void)
     ) << "\"" << std::endl;
 }
 
-int main(void)
+std::vector<std::string> CreateFilenameList(const char *tpl, unsigned int start, unsigned int stop)
 {
+    char buffer[64];
+    std::vector<std::string> ret;
+
+    for (unsigned int i = start; i < stop; ++i)
+    {
+        snprintf(buffer, 64, tpl, i);
+        ret.push_back(std::string(buffer));
+    }
+
+    return ret;
+}
+
+int main(int argc, char **argv)
+{
+    if (argc != 10)
+    {
+        std::cerr << "inpath(string)\tfilenametpl(string)\toutpath(string)\tstart(int)\tstop(int)\tX\tY\tDX\tDY" << std::endl;
+        throw std::runtime_error("Parameters missing");
+    }
+
+    std::string INPATH = argv[1]; // path with leading slash
+    std::string FILENAMETPL = argv[2]; // "img_%09d_00-BF_EGFP_000.tif"
+    int START = std::atoi(argv[3]); // 0
+    int STOP = std::atoi(argv[4]); // 1000
+    int X = std::atoi(argv[5]); //512
+    int Y = std::atoi(argv[6]); //325
+    int DX = std::atoi(argv[7]); //512
+    int DY = std::atoi(argv[8]); //512
+    std::string OUTPATH = argv[9]; // path with leading slash
+
+    std::vector<std::string> filenames = CreateFilenameList(FILENAMETPL.c_str(), START, STOP);
+
+    cv::Rect subrect = cv::Rect(X, Y, DX, DY);
+
     std::ofstream out, out_len, out_params;
-    out.open("data_exp.txt");
-    out_len.open("data_len.txt");
-    out_params.open("data_params.txt");
+    out.open(OUTPATH + "data_exp.txt");
+    out_len.open(OUTPATH + "data_len.txt");
+    out_params.open(OUTPATH + "data_params.txt");
 
 /*for (real anglee = 0.; anglee < 360.; anglee+=1.)
 {
@@ -581,7 +613,7 @@ int main(void)
     real x_diff = rect1.center.x - rect2.center.x;
     real y_diff = rect1.center.y - rect2.center.y;
     Vector v(x_diff, y_diff);
-    Vector n(std::sin(rect1.angle/360.*2.*PI),-std::cos(rect1.angle/360.*2.*PI)); //assume rect1.angle \approx rect2.angle
+    Vector n(std::sin(rect1.angle/360.*2.*M_PI),-std::cos(rect1.angle/360.*2.*M_PI)); //assume rect1.angle \approx rect2.angle
     Vector perp = (v - n*(n*v));
 
     cv::Mat img_test = cv::Mat(1024, 1024, CV_8UC1, WHITE);
@@ -614,8 +646,7 @@ int main(void)
 
     cv::Mat original, grey, normalized, blurred, subtracted, subtracted_normalized, edge_detected, binary, dilatederoded;
 
-    std::vector<std::string> files = {"img_000000000_00-BF_EGFP_000.tif"};
-    cv::Rect subrect(512, 325, 512, 512); // 512, 325, 512, 512 for video_2
+    //cv::Rect subrect(360,  90, 512, 512); // subrect(512, 325, 512, 512) for 60x_1.0_BF_2016_01_27_2, subrect(380, 150, 512, 512) for 60x_1.0_BF_2016_01_27_4, subrect(360,  90, 512, 512) for 60x_1.0_BF_2016_01_27_6
     bool invert_from_binary_onwards = false;
 
     out << "W: " << subrect.width << " H: " << subrect.height << std::endl;
@@ -634,11 +665,17 @@ int main(void)
     << "max_allowed_perp_center_diff_factor = " << max_allowed_perp_center_diff_factor << std::endl
     << "max_area_overlapp = " << max_area_overlapp << std::endl
     << "invert = " << invert_from_binary_onwards << std::endl;
+    out_params.close();
 
-    for (std::string filename : files)
+    unsigned int imagenum = 0;
+    for (std::string filename : filenames)
     {
+        std::stringstream ss;
+        ss << std::setfill('0') << std::setw(5);
+        ss << imagenum;
+
         //load original image
-        original = cv::imread(filename, CV_LOAD_IMAGE_GRAYSCALE); //("1.0ROIwhite9.9.15-gut.tif", CV_LOAD_IMAGE_GRAYSCALE); //cv::imread("img_000000000_02-BF1_000.tif", CV_LOAD_IMAGE_GRAYSCALE);
+        original = cv::imread(INPATH + filename, CV_LOAD_IMAGE_GRAYSCALE); //("1.0ROIwhite9.9.15-gut.tif", CV_LOAD_IMAGE_GRAYSCALE); //cv::imread("img_000000000_02-BF1_000.tif", CV_LOAD_IMAGE_GRAYSCALE);
 
         //subimage
         cv::Mat subImage(original, subrect);
@@ -646,33 +683,33 @@ int main(void)
 
         //convert to greyscale
         //cvtColor(original, grey, cv::CV_BGR2GRAY);
-        //cv::imwrite("test_Grey.png", grey);
+        //cv::imwrite(OUTPATH + ss.str() + "test_Grey.png", grey);
 
         //histogram equalizer
         cv::equalizeHist(original, normalized);
         //cv::Ptr<cv::CLAHE> clahe = cv::createCLAHE();
         //clahe->setClipLimit(4);
         //clahe->apply(original, normalized);
-        cv::imwrite("test_Normalized.png", normalized);
+        cv::imwrite(OUTPATH + ss.str() + "_Normalized.png", normalized);
 
         //bilateral filter
         cv::bilateralFilter(normalized, blurred, 20, 100, 100); //20, 100, 100
-        cv::imwrite("test_Blurred.png", blurred);
+        ///cv::imwrite(OUTPATH + ss.str() + "test_Blurred.png", blurred);
 
         //subtract
         //subtracted = blurred - original;
         //cv::subtract(normalized, blurred, subtracted);
         NumpySubtract(blurred, normalized, subtracted);
         //NumpySubtract(normalized, blurred, subtracted);
-        cv::imwrite("test_Subtracted.png", subtracted);
+        ///cv::imwrite(OUTPATH + ss.str() + "test_Subtracted.png", subtracted);
 
         //histogram equalizer
         cv::equalizeHist(subtracted, subtracted_normalized);
-        cv::imwrite("test_Subtracted_Normalized.png", subtracted_normalized);
+        ///cv::imwrite(OUTPATH + ss.str() + "test_Subtracted_Normalized.png", subtracted_normalized);
 
         //edge detection
         //cv::Canny(subtracted_normalized, edge_detected, 0, 50, 7);
-        //cv::imwrite("test_Edge_Detected.png", edge_detected);
+        //cv::imwrite(OUTPATH + ss.str() + "test_Edge_Detected.png", edge_detected);
         //CONTINUE /W EDGE_DETECTED?
 
         //binary
@@ -685,17 +722,17 @@ int main(void)
         {
             cv::bitwise_not(binary, binary);
         }
-        cv::imwrite("test_Binary.png", binary);
+        ///cv::imwrite(OUTPATH + ss.str() + "test_Binary.png", binary);
 
         //dilate/erode
         //cv::dilate(binary, dilatederoded, cv::Mat::ones(3,3,CV_8U), cv::Point(-1, -1), 1);
-        //cv::imwrite("test_Binary_eroded_dilated.png", dilatederoded);
+        //cv::imwrite(OUTPATH + ss.str() + "test_Binary_eroded_dilated.png", dilatederoded);
         dilatederoded = binary;
 
         RectangleList rects = FindRectangles(dilatederoded, width, height, delta_angle, ignore_ratio, delta_x, delta_y);
 
         cv::Mat img_with_rectangles = DrawRotatedRectList(normalized, rects, RED);
-        cv::imwrite("test_Orig_wRectangles.png", img_with_rectangles);
+        ///cv::imwrite(OUTPATH + ss.str() + "test_Orig_wRectangles.png", img_with_rectangles);
 
         std::vector<Contour> contours = MakeContoursFromRectangles(normalized, rects, original.rows, original.cols);
         std::cout << "Found rectangles: " << rects.size() << ", contours: " << contours.size() << std::endl;
@@ -772,7 +809,7 @@ int main(void)
 
         // Draw rotated rects (non-filtered)
         cv::Mat img_with_fits_before_filter = DrawRotatedRectListList(normalized, fit_rects, RED);
-        cv::imwrite("test_Orig_wfittedRects_beforeFilter.png", img_with_fits_before_filter);
+        ///cv::imwrite(OUTPATH + ss.str() + "test_Orig_wfittedRects_beforeFilter.png", img_with_fits_before_filter);
 
 
         // filter subrects in group that overlapp
@@ -852,21 +889,22 @@ int main(void)
             {
                 if (rect.size.width < rect.size.height)
                 {
-                    stream << ((90. - rect.angle)/360.*2*PI);
+                    stream << ((90. - rect.angle)/360.*2*M_PI);
                 }
                 else
                 {
-                    stream << ((-rect.angle)/360.*2*PI);
+                    stream << ((-rect.angle)/360.*2*M_PI);
                 }
             }
         ) << std::endl;
 
-        std::cout << "Filtered additional rectangles due to overlapp: " << num_filtered << std::endl;
+        std::cout << "Filtered additional rectangles due to overlap: " << num_filtered << std::endl;
         std::cout << "Final count of particles: " << fit_rects_filtered.size() << std::endl;
 
         // Draw rotated rects (filtered)
-        cv::Mat img_with_fits = DrawRotatedRectList(normalized, fit_rects_filtered, RED);
-        cv::imwrite("test_Orig_wfittedRects.png", img_with_fits);
+        cv::Mat img_with_fits = DrawRotatedRectList(normalized, fit_rects_filtered, RED, 2);
+        cv::imwrite(OUTPATH + ss.str() + "_Orig_wfittedRects.png", img_with_fits);
+        ++imagenum;
     }
 
     out.close();

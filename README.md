@@ -15,11 +15,18 @@ Python
 detects bacteria, outputs positions, angles and sizes of rectangles
 
 `ImageProcessing inpath filenametpl start stop X Y DX DY outpath`
-inpath: path with input images
-filenametpl: filename template (printf syntax)
-start and stop: ints used to fromat filenametpl
-X Y DX DY: define a subregion to read from the images
-outpath: path for output
+<dl>
+  <dt>inpath</dt>
+  <dd>path with input images (including trailing slash)</dd>
+  <dt>filenametpl</dt>
+  <dd>filename template (printf syntax)</dd>
+  <dt>start and stop</dt>
+  <dd>ints used to format filenametpl</dd>
+  <dt>X Y DX DY</dt>
+  <dd>defines a subregion to read from the images</dd>
+  <dt>filenametpl</dt>
+  <dd>path for output (including trailing slash)</dd>
+</dl>
 
 [Raw data](https://www.youtube.com/watch?v=XVsikfZki0Q) in real time.
 

@@ -24,7 +24,7 @@ detects bacteria, outputs positions, angles and sizes of rectangles
   <dd>ints used to format filenametpl</dd>
   <dt>X Y DX DY</dt>
   <dd>defines a subregion to read from the images</dd>
-  <dt>filenametpl</dt>
+  <dt>outpath</dt>
   <dd>path for output (including trailing slash)</dd>
 </dl>
 

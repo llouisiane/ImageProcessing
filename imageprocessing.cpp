@@ -584,7 +584,7 @@ int main(int argc, char **argv)
 {
     if (argc != 10)
     {
-        std::cerr << "inpath(string)\tfilenametpl(string)\toutpath(string)\tstart(int)\tstop(int)\tX\tY\tDX\tDY" << std::endl;
+        std::cerr << "inpath(string)\tfilenametpl(string)\tstart(int)\tstop(int)\tX\tY\tDX\tDY\toutpath(string)" << std::endl;
         throw std::runtime_error("Parameters missing");
     }
 
@@ -599,6 +599,7 @@ int main(int argc, char **argv)
     std::string OUTPATH = argv[9]; // path with leading slash
 
     std::vector<std::string> filenames = CreateFilenameList(FILENAMETPL.c_str(), START, STOP);
+
 
     cv::Rect subrect = cv::Rect(X, Y, DX, DY);
 

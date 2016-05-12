@@ -600,7 +600,6 @@ int main(int argc, char **argv)
 
     std::vector<std::string> filenames = CreateFilenameList(FILENAMETPL.c_str(), START, STOP);
 
-
     cv::Rect subrect = cv::Rect(X, Y, DX, DY);
 
     std::ofstream out, out_len, out_params;

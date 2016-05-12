@@ -12,6 +12,7 @@
 				<Option object_output="obj/Debug/" />
 				<Option type="1" />
 				<Option compiler="gcc" />
+				<Option parameters='\&quot;\&quot; &quot;img_%09d_00-BF_EGFP_000.tif&quot; 0 3 512 325 512 512 \&quot;\&quot;' />
 				<Compiler>
 					<Add option="-g" />
 				</Compiler>
@@ -21,7 +22,7 @@
 				<Option object_output="obj/Release/" />
 				<Option type="1" />
 				<Option compiler="gcc" />
-				<Option parameters='&quot;/&quot; &quot;img_%9d_00-BF_EGFP_000.tif&quot; 0 2 512 325 512 512 &quot;/&quot;' />
+				<Option parameters='\&quot;\&quot; &quot;img_%09d_00-BF_EGFP_000.tif&quot; 0 3 512 325 512 512 \&quot;\&quot;' />
 				<Compiler>
 					<Add option="-fexpensive-optimizations" />
 					<Add option="-O3" />

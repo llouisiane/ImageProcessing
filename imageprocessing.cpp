@@ -588,7 +588,7 @@ int main(int argc, char **argv)
         throw std::runtime_error("Parameters missing");
     }
 
-    std::string INPATH = argv[1]; // path with leading slash
+    std::string INPATH = argv[1]; // path with trailing slash
     std::string FILENAMETPL = argv[2]; // "img_%09d_00-BF_EGFP_000.tif"
     int START = std::atoi(argv[3]); // 0
     int STOP = std::atoi(argv[4]); // 1000
@@ -596,7 +596,7 @@ int main(int argc, char **argv)
     int Y = std::atoi(argv[6]); //325
     int DX = std::atoi(argv[7]); //512
     int DY = std::atoi(argv[8]); //512
-    std::string OUTPATH = argv[9]; // path with leading slash
+    std::string OUTPATH = argv[9]; // path with trailing slash
 
     std::vector<std::string> filenames = CreateFilenameList(FILENAMETPL.c_str(), START, STOP);
 

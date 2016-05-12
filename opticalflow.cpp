@@ -74,7 +74,7 @@ int main(void)
     cv::Mat orig_1, orig_2, norm_1, norm_2, flow, smallflow, orig_wflow;
 
     unsigned int i, winsize = 16, smallwinsize = 1;
-    unsigned int no_of_flows = 999; // 10
+    unsigned int no_of_flows = 3; // 10
 
     std::string indir = "./"; // "rawpics"
     std::string outdir = "./"; // "flow"
@@ -96,11 +96,11 @@ int main(void)
         //load original image
         ss << std::setw(9) << std::setfill('0') << i;
         std::string s = ss.str();
-        orig_1 = cv::imread(indir+"img_" + s + "_02-BF1_000.tif", CV_LOAD_IMAGE_GRAYSCALE); //img_000000000_02-BF1_000.tif
+        orig_1 = cv::imread(indir+"img_" + s + "_00-BF_EGFP_000.tif", CV_LOAD_IMAGE_GRAYSCALE); //img_000000000_02-BF1_000.tif
         ss.str("");
         ss << std::setw(9) << std::setfill('0') << i+1;
         s = ss.str();
-        orig_2 = cv::imread(indir+"img_" + s + "_02-BF1_000.tif", CV_LOAD_IMAGE_GRAYSCALE);
+        orig_2 = cv::imread(indir+"img_" + s + "_00-BF_EGFP_000.tif", CV_LOAD_IMAGE_GRAYSCALE);
 
         //histogram equalizer
         cv::equalizeHist(orig_1, norm_1);

@@ -1,0 +1,13 @@
+group_mode = 3
+subrect = 512, 325, 512, 512
+width = 2
+height = 24
+delta_angle = 1
+ignore_ratio = 0.026
+delta_x = 1
+delta_y = 1
+max_allowed_angle_diff = 2
+max_allowed_center_diff_factor = 0.6
+max_allowed_perp_center_diff_factor = 0.4
+max_area_overlapp = 0.52
+invert = 0

@@ -51,3 +51,14 @@ simple image normalization
 
 ## opticalflow
 outputs optical flow grid and calculates correlation functions
+
+
+##step-by-step instructions for setting up OpenCV for imageprocessing:
+- download and install [Codeblocks](http://www.codeblocks.org) with mingw (includes gcc compiler)
+- download and unpack [OpenCV](https://sourceforge.net/projects/opencvlibrary/files/) (tested 3.1)
+- create symlink "opencv" to your OpenCV installation (super folder of "build", "sources" etc), e.g. under Windows using admin privileged command line and calling `mklink /J C:\[...\where your Codeblocks project is]\opencv C:\[...\where your OpenCV is]\opencv`
+- download and install [CMake](https://cmake.org/)
+- build opencv library with CMake: "[...]\opencv\sources" as source and "[...]\opencv\build\x86\mingw"(create folder first) as binaries destination, click "Configure", choose "MinGW Makefiles", after it finishes "Generate"
+- add the `MinGW\bin` folder to your operating systems PATH variable
+- in a command line, set your directory (using `cd`) to `[...]\opencv\build\x86`, run `mingw32-make`, and `mingw32-make install` after it finishes
+- build and run imageprocessing.cbp

@@ -56,7 +56,7 @@ is a "2"
 #include "imgcodecs/imgcodecs_c.h"
 
 #include "Vector2D.hpp"
-#include "constants.hpp"
+#include "constantsImgPro.hpp"
 
 typedef std::vector<cv::RotatedRect> RectangleList;
 typedef std::map<unsigned int, std::vector<Vector>> Sizedict;
@@ -297,7 +297,7 @@ int main(void)
     std::string out_file2 = dir + "data_len_tracked.txt";
     std::string out_file3 = dir + "data_vel_tracked.txt";
     std::string out_file4 = dir + "data_extras_tracked.txt";
-    unsigned int time_start = 1, time_stop = 2001, time_step = 1;
+    unsigned int time_start = 1, time_stop = 4, time_step = 1;
 
     real L = 512.; //assert quadratic
 
@@ -440,9 +440,9 @@ int main(void)
         std::set<index> used_matches;
 
         //iterative scheme to find tracking partners
-        
+
         /*
-        
+
         /*
         make list of mappings with highest ratings for each particle sorted by rating, called prev mappings (particles may have same successor)
 
@@ -455,9 +455,9 @@ int main(void)
         if another successor had to be found for particle,
         repeat this process to ensure the particle with the highest rating is found
         in case this successor is (again) used by multiple particles
-        
+
         */
-        
+
         bool tracking_changes = true;
         while (tracking_changes) //keep iterating
         {

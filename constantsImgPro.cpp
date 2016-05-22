@@ -1,6 +1,6 @@
 //constants.cpp v16 30.10.2015
 
-#include "constants.hpp"
+#include "constantsImgPro.hpp"
 
 /*
 see paper: Dynamical maximum entropy approach to flocking
@@ -66,7 +66,7 @@ real distance_periodic(Vector p1, Vector p2, real L)
     return std::sqrt(minx*minx + miny*miny);
 }
 
-void calculate_n_voronoi(MATRIX &n, const std::vector<Vector> &positions, real L)
+/*void calculate_n_voronoi(MATRIX &n, const std::vector<Vector> &positions, real L)
 {
     assert(n.GetWidth() == positions.size() && n.GetHeight() == positions.size());
     voronoicell_neighbor cell;
@@ -112,7 +112,7 @@ void calculate_n_voronoi(MATRIX &n, const std::vector<Vector> &positions, real L
 
     //con.draw_particles("output/random_points_p.gnu");
     //con.draw_cells_gnuplot("output/random_points_v.gnu");
-}
+}*/
 
 void calculate_n_metric(MATRIX &n, const std::vector<Vector> &positions, real L, real r0)
 {

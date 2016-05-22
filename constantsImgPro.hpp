@@ -12,8 +12,8 @@
 #include <map>
 #include <sstream>
 
-#include "voro++.hh"
-using namespace voro;
+//#include "voro++.hh"
+//using namespace voro;
 
 #include "Buffer.hpp"
 #include "Vector2D.hpp"

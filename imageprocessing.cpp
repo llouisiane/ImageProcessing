@@ -14,6 +14,10 @@
 
 #include "Vector2D.hpp"
 
+#ifndef M_PI
+#define M_PI 3.14159265358979323846
+#endif
+
 //A: test each rectangle only with the first in each group
 //B: test each rectangle with each other: if any two are found to not belong to the same particle, it is considered as such //B is senseless.... use A or C....
 //C: test each rectangle with each other: if all pairs are found to not belong to the same particle, it is considered as such

@@ -27,7 +27,7 @@ detects bacteria, outputs positions, angles and sizes of rectangles
   <dd>path for output (including trailing slash)</dd>
 </dl>
 
-More parameters in .cpp file (starting with "int width = 2")  
+More parameters in .cpp file (starting with "int width")  
 
 [Raw data](https://www.youtube.com/watch?v=XVsikfZki0Q) in real time.
 

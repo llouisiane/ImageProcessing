@@ -66,7 +66,8 @@ outputs optical flow grid and calculates correlation functions
 
 
 ## step-by-step instructions for setting up OpenCV for imageprocessing
-- download and install [Codeblocks](http://www.codeblocks.org) with mingw (includes gcc compiler)
+- download and install [Codeblocks](http://www.codeblocks.org) and seperately [mingw](http://mingw-w64.org)
+- set these mingw's execuatables in the codeblock's toolchain (settings -> compiler -> toolchain executables)
 - download and unpack [OpenCV](https://sourceforge.net/projects/opencvlibrary/files/) (tested 3.0)
 - create symlink "opencv" to your OpenCV installation (super folder of "build", "sources" etc), e.g. under Windows using admin privileged command line and calling `mklink /J C:\[...\where your Codeblocks project is]\opencv C:\[...\where your OpenCV is]\opencv`
 - download and install [CMake](https://cmake.org/)

@@ -35,14 +35,15 @@
 			</Target>
 		</Build>
 		<Compiler>
-			<Add option="-Wall" />
 			<Add option="-std=c++11" />
+			<Add option="-Wall" />
+			<Add option="-D_USE_MATH_DEFINES" />
 			<Add directory="opencv/build/include" />
 			<Add directory="opencv/build/include/opencv" />
 			<Add directory="opencv/build/include/opencv2" />
 		</Compiler>
 		<Linker>
-			<Add library="opencv/build/x86/mingw/lib/*.a" />
+			<Add library="opencv\build\x86\mingw\lib\*.a" />
 			<Add directory="opencv/build/x86/mingw/bin" />
 		</Linker>
 		<Unit filename="Vector2D.hpp" />

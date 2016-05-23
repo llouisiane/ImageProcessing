@@ -50,7 +50,7 @@ smooths trajectories by splines (one parameter "smoothing")
 finds bacteria in the same cluster
 
 ## normalize
-simple image normalization
+histogram equalisation normalization
 
 ## opticalflow
 outputs optical flow grid and calculates correlation functions

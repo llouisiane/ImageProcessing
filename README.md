@@ -55,7 +55,7 @@ simple image normalization
 ## opticalflow
 outputs optical flow grid and calculates correlation functions
 
-## order of execution:
+## order of execution
 - imageprocessing onto raw images yields positions, orientations (data_exp.txt) and dimensions (data_len.txt)
 - delete_duplicated_lines_data_exp yields data withouth duplicate output rectangles (due to unknown bug)
 - tracking (yields [...]_tracked.txt)
@@ -65,7 +65,7 @@ outputs optical flow grid and calculates correlation functions
 
 
 
-## step-by-step instructions for setting up OpenCV for imageprocessing:
+## step-by-step instructions for setting up OpenCV for imageprocessing
 - download and install [Codeblocks](http://www.codeblocks.org) with mingw (includes gcc compiler)
 - download and unpack [OpenCV](https://sourceforge.net/projects/opencvlibrary/files/) (tested 3.0)
 - create symlink "opencv" to your OpenCV installation (super folder of "build", "sources" etc), e.g. under Windows using admin privileged command line and calling `mklink /J C:\[...\where your Codeblocks project is]\opencv C:\[...\where your OpenCV is]\opencv`

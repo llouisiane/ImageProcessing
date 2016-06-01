@@ -66,6 +66,12 @@ outputs optical flow grid and calculates correlation functions
 
 
 ## step-by-step instructions for setting up OpenCV for imageprocessing
+Linux:
+- follow one of the guides, eg. [here](http://docs.opencv.org/3.1.0/d7/d9f/tutorial_linux_install.html)
+- you have to include the shared library files (*.so) from the `bin` folder of the build to the PATH variable or copy them next to executable
+- you have to change the "search directories" in codeblocks (`Project -> Build options -> Search directories`) to accommodate for your file structure (and possibly add search directories)
+
+Windows:
 - download and install [Codeblocks](http://www.codeblocks.org) and if on Windows OS seperately [mingw](http://mingw-w64.org)
 - Windows only: set these mingw's execuatables in the codeblock's toolchain (settings -> compiler -> toolchain executables)
 - download and unpack [OpenCV](https://sourceforge.net/projects/opencvlibrary/files/) (tested 3.0)

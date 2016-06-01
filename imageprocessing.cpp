@@ -5,6 +5,7 @@
 #include <tuple>
 #include <iomanip>
 #include <sstream>
+#include <stdexcept>
 
 #include "core.hpp"
 #include "highgui.hpp"

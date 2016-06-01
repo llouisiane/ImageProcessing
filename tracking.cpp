@@ -60,6 +60,7 @@ is a "2"
 
 typedef std::vector<cv::RotatedRect> RectangleList;
 typedef std::map<unsigned int, std::vector<Vector>> Sizedict;
+typedef unsigned int uindex;
 
 const cv::Scalar WHITE = cv::Scalar(255);
 const cv::Scalar GRAY = cv::Scalar(127);
@@ -224,7 +225,7 @@ real rate_match(Vector pos1, Vector pos2, real ang1, real ang2, Vector size1, Ve
     return pospara_rating + posorth_rating + ang_rating + area_rating;
 }
 
-real calc(unsigned int t, unsigned int t2, Posdict &positions, Angdict &angles, Sizedict &sizes, index particle, index other_particle, real L, bool periodic, real pospara_factor, real posorth_factor, real angfactor, real areafactor)
+real calc(unsigned int t, unsigned int t2, Posdict &positions, Angdict &angles, Sizedict &sizes, uindex particle, uindex other_particle, real L, bool periodic, real pospara_factor, real posorth_factor, real angfactor, real areafactor)
 {
     return rate_match(positions[t][particle], positions[t2][other_particle], angles[t][particle], angles[t2][other_particle], sizes[t][particle], sizes[t2][other_particle], pospara_factor, posorth_factor, angfactor, areafactor, L, periodic);
 }
@@ -240,7 +241,7 @@ template <typename T> std::vector<T> range(T n)
 }
 
 
-real FixAngle(Posdict &positions, Angdict &angles, std::tuple<index, index, index> &msecond, unsigned int t, unsigned int t2, unsigned int whichparticle, bool last_step = false)
+real FixAngle(Posdict &positions, Angdict &angles, std::tuple<uindex, uindex, uindex> &msecond, unsigned int t, unsigned int t2, unsigned int whichparticle, bool last_step = false)
 {
     unsigned int vt1, vt2;
     if (last_step)
@@ -354,15 +355,15 @@ int main(void)
 
         std::cout << "Number of compared particles: " << prevnum << " " << nextnum << std::endl;
 
-        std::vector<index> prevbox = range(prevnum); // all indices
-        std::vector<index> nextbox = range(nextnum);
+        std::vector<uindex> prevbox = range(prevnum); // all indices
+        std::vector<uindex> nextbox = range(nextnum);
 
-        std::vector<std::vector<index>> boxes;
+        std::vector<std::vector<uindex>> boxes;
         boxes.push_back(prevbox);
-        std::vector<std::vector<index>> neighbouring_nextboxes; //including self, needs to be a function
+        std::vector<std::vector<uindex>> neighbouring_nextboxes; //including self, needs to be a function
         neighbouring_nextboxes.push_back(nextbox);
 
-        /*for (index i = 0; i < prevnum; ++i)
+        /*for (uindex i = 0; i < prevnum; ++i)
         {
             assert(positions[t][i] == positions[t2][i]);
             assert(angles[t][i] == angles[t2][i]);
@@ -372,12 +373,12 @@ int main(void)
             }
         }*/
 
-        //std::vector< std::map<real,index,std::greater<real>> > rates;
+        //std::vector< std::map<real,uindex,std::greater<real>> > rates;
         //vector with dictionary (map) for each particle p that maps all ratings
         //of all particles to their index p2 (including self) and is ordered
         //from low rating (good match) to high rating
         //length is varying since all ratings > rating_threshold are cut
-        std::vector< std::map<real,index> > rates(prevnum);
+        std::vector< std::map<real,uindex> > rates(prevnum);
 
         /*
         for all combinations of particles of two frames:
@@ -387,11 +388,11 @@ int main(void)
         */
         for (auto box : boxes)
         {
-            for (index particle : box)
+            for (uindex particle : box)
             {
                 for (auto nbox : neighbouring_nextboxes)
                 {
-                    for (index other_particle : nbox)
+                    for (uindex other_particle : nbox)
                     {
                         //map should contain only tracking partners with rating below threshold
                         real rate = calc(t, t2, positions, angles, sizes, particle, other_particle, L, periodic_boundary_cond, pospara_factor, posorth_factor, angfactor, areafactor);
@@ -411,7 +412,7 @@ int main(void)
             //for (auto p : particle)
             auto p = particle.begin();
 
-            for (index j = 0; j < 10 && j < particle.size(); ++j)
+            for (uindex j = 0; j < 10 && j < particle.size(); ++j)
             {
                 std::cout << p->first << " " << p->second << " ";
                 ++p;
@@ -425,10 +426,10 @@ int main(void)
         //of best matching tracking partner p->p2 for each p
         //where ranking is the index in the rating map rates[p]
         //e.g. 0 -> 0, 0; 0 -> 5, 0.1; 0 -> 8, 0.2 it would mean {0.2 : (0, 8, 2)}
-        std::multimap<real, std::tuple<index, index, index>> matches;
-        std::multimap<real, std::tuple<index, index, index>> newmatches;
+        std::multimap<real, std::tuple<uindex, uindex, uindex>> matches;
+        std::multimap<real, std::tuple<uindex, uindex, uindex>> newmatches;
 
-        for (index i = 0; i < rates.size(); ++i)
+        for (uindex i = 0; i < rates.size(); ++i)
         {
             auto p = rates[i].begin();
             if (p != rates[i].end()) //threshold not to small
@@ -437,7 +438,7 @@ int main(void)
             }
         }
 
-        std::set<index> used_matches;
+        std::set<uindex> used_matches;
 
         //iterative scheme to find tracking partners
 

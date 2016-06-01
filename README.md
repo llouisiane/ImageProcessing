@@ -69,7 +69,7 @@ outputs optical flow grid and calculates correlation functions
 Linux:
 - follow one of the guides, eg. [here](http://docs.opencv.org/3.1.0/d7/d9f/tutorial_linux_install.html)
 - you have to include the shared library files (*.so) from the `bin` folder of the build to the PATH variable or copy them next to executable
-- you have to change the "search directories" in codeblocks (`Project -> Build options -> Search directories`) to accommodate for your file structure (and possibly add search directories)
+- you have to change the "search directories" and "linker settings" in codeblocks (`Project -> Build options -> Search directories / Linker settings`) to accommodate for your file structure (and possibly add search directories and some `-lopencv_` type 'Other linker options')
 
 Windows:
 - download and install [Codeblocks](http://www.codeblocks.org) and if on Windows OS seperately [mingw](http://mingw-w64.org)

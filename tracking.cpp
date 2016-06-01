@@ -290,7 +290,7 @@ int main(void)
 {
     //ParaOrthDistance_test();
 
-    std::string dir = ".\\";
+    std::string dir = "";
 
     std::string in_file = dir + "data_exp_noduplicates.txt"; //data_exp.txt
     std::string in_file2 = dir + "data_len_noduplicates.txt"; //data_len.txt

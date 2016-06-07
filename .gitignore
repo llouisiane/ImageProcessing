@@ -5,3 +5,5 @@ obj/
 bin/
 opencv/
 *.pyc
+.project
+.cproject

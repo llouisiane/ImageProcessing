@@ -27,7 +27,7 @@ and particle 0 in line 1 is particle 0 in line 2 and so on
 #include "imgcodecs/imgcodecs_c.h"
 
 #include "Vector2D.hpp"
-#include "constants.hpp"
+#include "constantsImgPro.hpp"
 
 typedef double real; //float, double, ... //not needed
 typedef Vector2DT<real> Vector; //not needed

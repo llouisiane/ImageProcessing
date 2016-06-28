@@ -298,7 +298,7 @@ int main(void)
     std::string out_file2 = dir + "data_len_tracked.txt";
     std::string out_file3 = dir + "data_vel_tracked.txt";
     std::string out_file4 = dir + "data_extras_tracked.txt";
-    unsigned int time_start = 1, time_stop = 4, time_step = 1;
+    unsigned int time_start = 1, time_stop = 11, time_step = 1;
 
     real L = 512.; //assert quadratic
 

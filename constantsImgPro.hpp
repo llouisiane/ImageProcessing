@@ -12,6 +12,9 @@
 #include <map>
 #include <sstream>
 
+// for matrix
+#include <boost/numeric/ublas/matrix.hpp>
+
 //#include "voro++.hh"
 //using namespace voro;
 
@@ -114,6 +117,9 @@ real get_average_number_of_neighbours(const MATRIX &n);
 
 typedef std::map<unsigned int, std::vector<Vector>> Posdict;
 typedef std::map<unsigned int, std::vector<real>> Angdict;
+typedef std::map<unsigned int, std::map< unsigned int, boost::numeric::ublas::matrix<real>>>Matrixdict;
+//typedef std::map<unsigned int, std::vector<boost::numeric::ublas::matrix<real>>> Matrixdict;
+
 
 struct OutOpt {
     enum OutOptEnum : unsigned int {

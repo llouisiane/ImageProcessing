@@ -1,47 +1,9 @@
-// 2015-02-19
-
-/* TODO
--optional periodic boundary conditions: TEST!
--generalize to more than two frames? test python script to 1:1 find trajectories
-*/
+// 2016-06
+// inspired from tracking.cpp of Markus and Janis
 
 /* HOWTO USE
-needs the data_exp.txt and data_len.txt from the ImageProcessing.cbp/exe
-where there's a 1:1 conversion between the indices in those two files
-
-returns the tracked particles in a Entropy.cbp/exe compatible
-format data_exp_tracked.txt: (x,y) position, (a) angle
-"""
-header
-x01 y01 ... x0n x0n
-a01 ... a0n
-x11 y11 ... x1n x1n
-a11 ... a1n
-x21 y21 ... x2n x2n
-a21 ... a2n
-...
-""" -> 4 * times lines
-where the "0" are from time=1, the "1" are from time=2 and there's a 1:1
-conversion between those two, while the "2" are from time=2 and "3" from time=3 and so on
-notice that time=2 is double, because in the {0,1} set we track the 0 in 1
-and in the {2,3} set we track the 3 in 2;
-returns also data_len_tracked.txt: (h,w) height and width
-"""
-h01 w01 ... h0n w0n
-h21 w21 ... h2n w2n
-""" -> 1 * times lines
-notice that since there is a 1:1 conversion between each two lines in the _exp_tracked
-here only every second two line set has a line in _exp_tracked
-returns also data_vel_tracked.txt: (vx, vy) velocity in x and y direction
-"""
-vx01 vy01 ... vx0n vy0n
-vx21 vy21 ... vx2n vy2n
-...
-""" -> 1 * times lines
-see the _len_tracked.txt notes, only that here now the difference between {0,1}
-from time 1 and 2 is a "0" and the difference between {2,3} from time 2 and 3
-is a "2"
-*/
+ * TODO
+ */
 
 #include <iostream>
 #include <fstream>
@@ -49,6 +11,7 @@ is a "2"
 #include <tuple>
 #include <set>
 #include <stdlib.h>
+#include <string>
 
 // for matrices
 #include <boost/numeric/ublas/matrix.hpp>
@@ -56,7 +19,6 @@ is a "2"
 #include <boost/numeric/ublas/operation.hpp>
 #include <boost/numeric/ublas/operation_blocked.hpp>
 #include <boost/numeric/ublas/lu.hpp>
-
 
 #include "core.hpp"
 #include "highgui.hpp"
@@ -70,20 +32,8 @@ is a "2"
 #include "Vector2D.hpp"
 #include "constantsImgPro.hpp"
 
-//using namespace boost::numeric::ublas;
-
-typedef std::vector<cv::RotatedRect> RectangleList;
-typedef std::map<unsigned int, std::vector<Vector>> Sizedict;
 typedef unsigned int uindex;
 
-const cv::Scalar WHITE = cv::Scalar(255);
-const cv::Scalar GRAY = cv::Scalar(127);
-const cv::Scalar BLACK = cv::Scalar(0);
-const cv::Scalar RED = cv::Scalar(0, 0, 255);
-const cv::Scalar BLUE = cv::Scalar(255, 0, 0);
-const cv::Scalar GREEN = cv::Scalar(0, 255, 0);
-const cv::Scalar YELLOW = cv::Scalar(0, 255, 255);
-const cv::Scalar ORANGE = cv::Scalar(0, 128, 255);
 
 const real sqrt2 = std::sqrt(real(2));
 
@@ -125,20 +75,7 @@ std::string read_data_len(std::string filename, Sizedict &sizes, std::vector<uns
     return firstline;
 }
 
-//obsolete
-real AngleDifference(real a, real b) //might be wrong if angles are are not from the same interval (eg. [-pi,pi] and [0, 2pi])
-{
-    //copied from clustering.cpp
-    real diff = std::abs(a - b);
-    return std::min(diff, 2*PI - diff);
-}
 
-/*
-ang = Flatten[Table[{i, j}, {i, -4*Pi, 4*Pi, Pi/8}, {j, -4*Pi, 4*Pi, Pi/8}], 1];
-angdif[a_, b_] := Min[{Mod[a - b, Pi], Mod[b - a, Pi]}]
-Map[angdif[#[[1]], #[[2]]] &, ang];
-ListPlot[%, PlotRange -> All]
-*/
 real AngleDifference90(real a, real b)
 {
     return std::min(mod(a - b, PI), mod(b - a, PI));
@@ -192,9 +129,8 @@ void ParaOrthDistance_test(void)
     assert_almost_equal(0.1, 0.); //fails ofcourse
 }
 
-//reference, pointer?????
 //imagesize in px
-real rate_match(Vector pos1, Vector pos2, real ang1, real ang2, Vector size1, Vector size2, real pospara_factor, real posorth_factor, real ang_factor, real area_factor, real L, bool periodic=false)
+real rate_match(Vector pos1, Vector pos2, real ang1, real ang2, Vector size1, Vector size2, real p_x, real p_y, real pospara_factor, real posorth_factor, real ang_factor, real area_factor, real dx, bool periodic=false)
 {
     //real com_distance;
     std::tuple<real, real> com_distance;
@@ -221,6 +157,7 @@ real rate_match(Vector pos1, Vector pos2, real ang1, real ang2, Vector size1, Ve
     //real angrating = angfactor * std::min(angabsdiff, PI - angabsdiff) / PI; //CAN BE NEGATIVE; FIX
     real ang_rating = ang_factor * AngleDifference90(ang1, ang2) / (PI/2); //not very very well tested...
 
+
     real area1 = size1.x * size1.y;
     real area2 = size2.x * size2.y;
 
@@ -235,19 +172,18 @@ real rate_match(Vector pos1, Vector pos2, real ang1, real ang2, Vector size1, Ve
         area_rating = area_factor * (area2 - area1)  /area2;
     }
 
+    // covariance
+    real cov_rating=0.0025*(p_x+p_y);
+
     //return +posrating + angrating + arearating;
-    return pospara_rating + posorth_rating + ang_rating + area_rating;
-}
-
-real calc(unsigned int t, unsigned int t2, Posdict &positions, Angdict &angles, Sizedict &sizes, uindex particle, uindex other_particle, real L, bool periodic, real pospara_factor, real posorth_factor, real angfactor, real areafactor)
-{
-    return rate_match(positions[t][particle], positions[t2][other_particle], angles[t][particle], angles[t2][other_particle], sizes[t][particle], sizes[t2][other_particle], pospara_factor, posorth_factor, angfactor, areafactor, L, periodic);
+    return pospara_rating + posorth_rating + ang_rating + area_rating + cov_rating;
 }
 
 
-real calcKal(unsigned int t, Posdict &positions, Matrixdict &pred, Angdict &angles, Sizedict &sizes, auto particle, uindex other_particle, real L, bool periodic, real pospara_factor, real posorth_factor, real angfactor, real areafactor)
+
+real calcKal(unsigned int t, Posdict &positions, Matrixdict &pred, Matrixdict &p_pred_dict, Angdict &angles, Sizedict &sizes, auto particle, uindex other_particle, real L, bool periodic, real pospara_factor, real posorth_factor, real angfactor, real areafactor)
 {
-    return rate_match(Vector(particle.second(0,0),particle.second(1,0)), positions[t][other_particle], atan2(particle.second(2,0),particle.second(3,0)), angles[t][other_particle], sizes[t-1][particle.first], sizes[t][other_particle], pospara_factor, posorth_factor, angfactor, areafactor, L, periodic);
+    return rate_match(Vector(particle.second(0,0), particle.second(1,0)), positions[t][other_particle], atan2(particle.second(2,0), particle.second(3,0)), angles[t][other_particle], sizes[t-1][particle.first], sizes[t][other_particle], p_pred_dict[t][particle.first](0,0), p_pred_dict[t][particle.first](1,1), pospara_factor, posorth_factor, angfactor, areafactor, L, periodic);
 }
 template <typename T> std::vector<T> range(T n)
 {
@@ -260,51 +196,6 @@ template <typename T> std::vector<T> range(T n)
 }
 
 
-real FixAngle(Posdict &positions, Angdict &angles, std::tuple<uindex, uindex, uindex> &msecond, unsigned int t, unsigned int t2, unsigned int whichparticle, bool last_step = false)
-{
-    unsigned int vt1, vt2;
-    if (last_step)
-    {
-        vt1 = t-1; //is this correct?
-        vt2 = t2-1;
-    }
-    else
-    {
-        vt1 = t;
-        vt2 = t2;
-    }
-    //at1 = t
-    //at2 = t2
-
-    // does atan2 give us "fixed" angles from fixed coords?
-    real velocityangle = std::atan2(positions[vt2][std::get<1>(msecond)].y - positions[vt1][std::get<0>(msecond)].y, positions[vt2][std::get<1>(msecond)].x - positions[vt1][std::get<0>(msecond)].x);
-    //not a nice hack : ( for std::get<"MUST HAVE CONSTANT">()
-    real angleangle;
-    if (whichparticle == 0)
-    {
-        angleangle = angles[t][std::get<0>(msecond)];
-    }
-    else
-    {
-        angleangle = angles[t][std::get<1>(msecond)];
-    }
-
-    real ang_distance = AngleDifference180(velocityangle, angleangle); //not very very well tested....
-
-    if (ang_distance > PI/2)
-    {
-        if (angleangle > 0)
-        {
-            angleangle -= PI;
-        }
-        else
-        {
-            angleangle += PI;
-        }
-    }
-    return angleangle;
-}
-// TODO: declare it somewhere ??
 // function for matrix inversion using LU factorisation (inspired from https://savingyoutime.wordpress.com/2009/09/21/c-matrix-inversion-boostublas/)
 bool InvertMatrix(const boost::numeric::ublas::matrix<real>& input, boost::numeric::ublas::matrix<real>& inverse)
 {
@@ -351,38 +242,157 @@ std::vector<std::string> CreateFilenameList(const char *tpl, unsigned int start,
 }
 
 
-int main(void)
+bool string2bool(std::string var){
+    if(var == "true" || var == "TRUE" || var=="1" ){
+  	    return true;
+    }
+    else if(var == "false" || var == "FALSE" || var=="0" ){
+        return false;
+    }
+    return false; // TODO: how to deal with that ?
+}
+
+
+void readParameters(std::string conf_file, int& X, int& Y, int& DX, int& DY, bool& plot_cov, unsigned int& time_start, unsigned int& time_stop, unsigned int& time_step, std::string& data_directory, std::string& filenametpl, std::string& data_positions_angles, std::string& data_sizes, real& v_mean, real& delta_t, bool& observe_velocity, real& initialNoise_x, real& initialNoise_y, real& initialNoise_vx, real& initialNoise_vy, real& weight_q_pos, real& weight_q_vel, real& weight_r, real& edge_region, real& angfactor, real& areafactor, real& rating_threshold, bool& print_index, int& multiple_pred_threshold, bool& multiple_pred, real& width_min){
+    std::ifstream infile(conf_file);
+    std::string line;
+    int count_param_positions=0;
+    while(std::getline(infile,line)){
+    	line=line.substr(0, line.find("//"));
+    	if(!line.empty()){
+    		switch(count_param_positions){
+    		    case 0: X=atoi(line.c_str());
+    		            break;
+    		    case 1: Y=atoi (line.c_str());
+    		            break;
+    		    case 2: DX=atoi (line.c_str());
+    		        	break;
+    		    case 3: DY=atoi (line.c_str());
+    		        	break;
+    		    case 4: plot_cov=string2bool(line.c_str());
+    		        	break;
+    		    case 5: time_start=atoi(line.c_str());
+    		        	break;
+    		    case 6: time_stop=atoi(line.c_str());
+    		        	break;
+    		    case 7: time_step=atoi(line.c_str());
+    		        	break;
+                //TODO: deal with fact that there can be a some spaces at the end
+    		    case 8: data_directory=line.c_str();
+    		        	break;
+    		    case 9: filenametpl=line.c_str();
+    		        	break;
+    		    case 10: data_positions_angles=line.c_str();
+    		        	 break;
+    		    case 11: data_sizes=line.c_str();
+    		        	 break;
+    		    case 12: v_mean=atof(line.c_str());
+    		        	 break;
+    		    case 13: delta_t=atof(line.c_str());
+    		        	 break;
+    		    case 14: observe_velocity=string2bool(line.c_str());
+    		        	 break;
+    		    case 15: initialNoise_x=atof(line.c_str());
+    		        	 break;
+    		    case 16: initialNoise_y=atof(line.c_str());
+    		        	 break;
+    		    case 17: initialNoise_vx=atof(line.c_str());
+    		        	 break;
+    		    case 18: initialNoise_vy=atof(line.c_str());
+    		        	 break;
+    		    case 19: weight_q_pos=atof(line.c_str());
+    		        	 break;
+    		    case 20: weight_q_vel=atof(line.c_str());
+    		        	 break;
+    		    case 21: weight_r=atof(line.c_str());
+    		        	 break;
+    		    case 22: edge_region=atof(line.c_str());
+    		        	 break;
+    		    case 23: angfactor=atof(line.c_str());
+    		        	 break;
+    		    case 24: areafactor=atof(line.c_str());
+    		        	break;
+    		    case 25: rating_threshold=atof(line.c_str());
+    		        	 break;
+    		    case 26: print_index=string2bool(line.c_str());
+    		        	break;
+    		    case 27: multiple_pred_threshold=atoi(line.c_str());
+    		             break;
+    		    case 28: multiple_pred=string2bool(line.c_str());
+    		             break;
+    		    case 29: width_min=atof(line.c_str());
+    		             break;
+    		    case 30: break;
+    		    default: std::cout<<"too many parameters"<<std::endl;
+    		}
+            count_param_positions++;
+    	}
+    }
+}
+
+int main(int argc, char **argv)
 {
+
+	if(argc!=2){
+		std::cerr<<"Wrong number of parameter. Usage: "<<std::endl<<"\t"<<argv[0]<<" DATA_DIRECTORY"<<std::endl;
+		return -1;
+	}
 
 	//////////////// 1) Initialization ////////////////
 
-	// TODO: make that the arguments can be entered from command line or from configuration file
-
-	// defines the part of the images that we are using (has to be the same as in imageprocessing.cpp)
-    int X = 512;
-    int Y = 0;
-    int DX = 512;
-    int DY = 512;
-    // TODO: somehow write this information in the output of imageprocessing.cpp so that we don't need to enter it again
+	// read arguments from configuration file config.txt
+    int subregion_x, subregion_y, dx, dy; // defines the part of the images that we are using (has to be the same as in imageprocessing.cpp)
+	bool plot_cov;    // do we plot covariance ellipses
+    unsigned int time_start, time_stop, time_step; // to define which frames we want to use
+    // input files
+    std::string dir=""; // working directory // TODO: how to deal with an empty parameter
+    std::string data_directory; // subdirectory where we put the data and where will be the output
+    std::string filenametpl;    // names of original pictures (we need them to compute vector fields to correct angles, and for visualization of the results)
+    std::string data_positions_angles;
+    std::string data_sizes;
+    real v_mean;
+    // time difference between 2 consecutive frames, what is it? say 1 (time in unit of delta t)
+    real delta_t;
+    bool observe_velocity;
+	// initialize error covariance matrices P
+    real initialNoise_x;
+    real initialNoise_y;
+    real initialNoise_vx;
+    real initialNoise_vy;
+    real weight_q_pos; // covariance of position process noise // values from kalman_parameter.cpp
+    real weight_q_vel; // covariance of velocity process noise
+    real weight_r;         // covariance of observation noise
+    real edge_region;      // proportion of the edge considered as edge (e.g.: if edge=0.1 and dx=10, we take a band of width 1 all around which is the edge)
+    // weight coefficients for energy function (used to do the assignment between predictions and observations)
+    real angfactor;		// for angular displacement
+    real areafactor;		// for area change
+    real rating_threshold; // (1.)  rating above means that cannot be the same particle
+    bool print_index;
+    int multiple_pred_threshold;
+    bool multiple_pred;
+    real width_min; // minimum width for a rectangle from the segmentation to be considered as a bacteria
+    readParameters(std::string(argv[1]) + "/config.txt", subregion_x, subregion_y, dx, dy, plot_cov, time_start, time_stop, time_step, data_directory, filenametpl, data_positions_angles, data_sizes, v_mean, delta_t, observe_velocity, initialNoise_x, initialNoise_y, initialNoise_vx, initialNoise_vy, weight_q_pos, weight_q_vel, weight_r, edge_region, angfactor, areafactor, rating_threshold, print_index, multiple_pred_threshold, multiple_pred, width_min);
 
     // times is a vector containing all the indices of the frames we want to use (time_stop not included)
-    unsigned int time_start = 1, time_stop = 10, time_step = 1;
     std::vector<unsigned int> times = MakeTimes(time_start, time_stop, time_step);
 
-    // input files:
-    // in_file contains x and y positions for each box, and angle of orientation (in radians, +/- pi) and that for each frame
-    // in_file2 contains length and width of each box, and that for each frame
-    std::string dir = "";
-    std::string in_file = dir + "data_exp_noduplicates.txt"; //data_exp.txt
-    std::string in_file2 = dir + "data_len_noduplicates.txt"; //data_len.txt
-    // TODO: check if maybe we could not use directly data_exp.txt, ... because we do not seem to have the duplication bug here
+    std::vector<std::string> filenames = CreateFilenameList(filenametpl.c_str(), time_start-1, time_stop);
+    // TODO: when time_step is not 1 ?
+
+    // in_file_positions_angles contains x and y positions for each box, and angle of orientation (in radians, +/- pi) and that for each frame
+    // in_file_sizes contains length and width of each box, and that for each frame
+    std::string in_file_positions_angles = dir + data_directory + data_positions_angles;
+    std::string in_file_sizes = dir + data_directory + data_sizes;
 
     // put observed data in dictionaries: one for the positions (x and y), one for the angles and one for the sizes (length and width) of the fitted rectangles
     Posdict positions;
     Angdict angles;
     Sizedict sizes;
-    read_data_single(in_file, positions, angles, times);
-    std::string header = read_data_len(in_file2, sizes, times);
+    std::string header = read_data_len(in_file_sizes, sizes, times);
+    read_data_single(in_file_positions_angles, positions, angles, times, sizes, width_min);
+
+    // because in this program we need a lot of matrix operations use a library: boost
+    // (www.boost.org/doc/libs/1_61_0/libs/numeric/ublas/doc/)
 
     // dictionary for predictions of states (dictionary of dictionary: time step, identity of bacteria and state)
     Matrixdict state_pred_dict;
@@ -392,47 +402,21 @@ int main(void)
     // dictionary for updated states (time, identity of bacteria and state)
     Matrixdict state_updated_dict;
 
-    // TODO
-    // somehow find some velocity values between the 2 first frames
-    // for now will just use the mean velocity
-
-    // TODO: find the mean velocity with the good unit
-    //mean velocity: 34.5 micro meters per second
-    real v_mean=0.1;
-
-    // time difference between 2 consecutive frames
-    // what is it? say 1 (time in unit of delta t)
-    int delta_t=1;
-
-    // because in this program we need a lot of matrix operations use a library: boost
-    // (www.boost.org/doc/libs/1_61_0/libs/numeric/ublas/doc/)
-
     // 4 by 4 matrix with only zeros
 	boost::numeric::ublas::matrix<real> zeros = boost::numeric::ublas::zero_matrix<real>(4,4);
 
 	// identity 4
     boost::numeric::ublas::identity_matrix<real> identity(4);
 
-
-	// initialize error covariance matrices P
-    real initialNoise_x=0.01;
-    real initialNoise_y=0.01;
-    real initialNoise_vx=0.01;
-    real initialNoise_vy=0.01;
-
-	// TODO: change and not put only zero: put something in the diagonal
-	Matrixdict p_dict; // dictionary of dictionaries, with times step and identities
+	Matrixdict p_dict; // dictionary of dictionaries, with times step and identities, for updated error covariance matrices
     unsigned int sizeInit=positions[1].size();
 	for (unsigned int i=0; i<sizeInit; i++){
 		p_dict[1][i]=zeros;
 		p_dict[1][i](0,0)=initialNoise_x;
-		p_dict[1][i](1,0)=initialNoise_y;
-		p_dict[1][i](2,0)=initialNoise_vx;
-		p_dict[1][i](3,0)=initialNoise_vy;
-
+		p_dict[1][i](1,1)=initialNoise_y;
+		p_dict[1][i](2,2)=initialNoise_vx;
+		p_dict[1][i](3,3)=initialNoise_vy;
 	}
-
-	std::cout<<p_dict[1][0]<<std::endl;
 
 	// predicted error covariance matrix dictionary
 	Matrixdict p_pred_dict;
@@ -445,21 +429,29 @@ int main(void)
     f(1,3)=delta_t;
 
     // matrix h for observation model
-    boost::numeric::ublas::identity_matrix<real> h(4);
+    boost::numeric::ublas::matrix<real> h=identity;
+    if(!observe_velocity){
+        h(2,2)=0;
+    	h(3,3)=0;
+    }
 
     // matrix q for covariance of process noise
-    // identity with a weight
-     // TODO: what weight to put for q and r?
-    int weight_q=10;
-    boost::numeric::ublas::matrix<real> q=weight_q*identity;
+    boost::numeric::ublas::matrix<real> q=zeros;
+    q(0,0)=q(1,1)=weight_q_pos;
+  	q(2,2)=q(3,3)=weight_q_vel;
 
     // matrix r for covariance of observation noise
-    int weight_r=10;
-    boost::numeric::ublas::matrix<real> r=weight_r*identity;
+    boost::numeric::ublas::matrix<real> r=zeros;
+    r(0,0)=r(1,1)=weight_r;
+    if(!observe_velocity){
+    	r(2,2)=r(3,3)=0;
+    }
+    else{
+    	r(2,2)=r(3,3)=weight_r;
+    }
 
     // counter for highest used bacteria index;
     int highest_index=-1;
-
     // initialize updated states at time t=1
     boost::numeric::ublas::matrix<real> state(4,1);
     for(unsigned int i=0; i<sizeInit; i++){
@@ -467,27 +459,21 @@ int main(void)
     	state(1,0)=positions[1][i].y;
     	state(2,0)=std::cos(angles[1][i])*v_mean;
     	state(3,0)=std::sin(angles[1][i])*v_mean;
-    	//state(2,0)=0;    	//or initialize the velocity to zero and hope that will be corrected by the filter
-    	//state(3,0)=0;
     	state_updated_dict[1][i]=state;
     	highest_index ++;   // increment the counter
     }
 
-    std::cout<<highest_index<<std::endl;
     // using the two first frames, correct the orientation (because +/- pi) by comparing with the vector field
     // use code from opticalflow.cpp
 
     // two first pictures
-    // TODO: make that an argument or sth
-    cv::Mat orig_1 = cv::imread("img_000000000_00-BF_EGFP_000.tif", CV_LOAD_IMAGE_GRAYSCALE);
-    cv::Mat orig_2 = cv::imread("img_000000001_00-BF_EGFP_000.tif", CV_LOAD_IMAGE_GRAYSCALE);
+    cv::Mat orig_1 = cv::imread(data_directory +filenames[0], CV_LOAD_IMAGE_GRAYSCALE);
+    cv::Mat orig_2 = cv::imread(data_directory +filenames[1], CV_LOAD_IMAGE_GRAYSCALE);
 
     // use only the subregion we are working on
-    cv::Rect subrect = cv::Rect(X, Y, DX, DY);
-	cv::Mat subImage_orig_1(orig_1, subrect);
-	orig_1=subImage_orig_1;
-	cv::Mat subImage_orig_2(orig_2, subrect);
-	orig_2=subImage_orig_1;
+    cv::Rect subrect = cv::Rect(subregion_x, subregion_y, dx, dy);
+	orig_1=cv::Mat(orig_1, subrect);
+	orig_2=cv::Mat(orig_2, subrect);;
 
     // histogram equalizer
     cv::Mat norm_1, norm_2, flow;
@@ -503,39 +489,35 @@ int main(void)
     real angle_flow;  // angle of the vector field at this position (x y)
     real angle_dif;   // difference with the orientation contained in the angles dictionary at time t=1
     // loop for all the bacteria found at time t=1
-    for (auto i:state_updated_dict[1]){
+    for (auto state_entry:state_updated_dict[1]){
     	// flow vector at the position of the bacteria
     	// why is the y axis upside down ?
     	// TODO: check where is the problem, maybe don't need to fix here
-    	const cv::Point2f& fxy=flow.at<cv::Point2f>(i.second(0,0), DY-i.second(1,0));
+    	const cv::Point2f& fxy=flow.at<cv::Point2f>(state_entry.second(0,0), state_entry.second(1,0));
     	// angle of this vector
         angle_flow=atan2(fxy.x,fxy.y);
-        angle_dif=angles[1][i.first]-angle_flow;
+        angle_dif=angles[1][state_entry.first]-angle_flow;
         // when absolute difference is more than 90°, correct the vx and vy in the dictionary for updated states at time t=1
         if ((angle_dif> PI/2 && angle_dif< 3*PI/2) || angle_dif<-PI/2){
-            i.second(2,0)*= -1;
-            i.second(3,0)*= -1;
+            state_entry.second(2,0)*= -1;
+            state_entry.second(3,0)*= -1;
         }
     }
 
-    // edge of whole considered area ?
-    // TODO: look at what happens when not square
-    real L=DX;
-
     // weight coefficients for energy function (used to do the assignment between predictions and observations)
-
     // for parallel distance: 1/average length  (10.)
     int count=0;
     real pospara_factor = 0.;
     for (unsigned int t: times){
     	for (Vector bact: sizes[t]){
     	    pospara_factor+=bact.x;
-    	    count++;;
+    	    count++;
     	}
     }
     pospara_factor/=count;
-    pospara_factor=(1/pospara_factor)*L;
+    pospara_factor=(1/pospara_factor)*dx;
 
+    //TODO collapse in one loop
     // for orthogonal distance: 1/average width (50.)
     count=0;
     real posorth_factor = 0.;
@@ -546,11 +528,7 @@ int main(void)
     	}
     }
     posorth_factor/=count;
-    posorth_factor=(1/posorth_factor)*L;
-
-    real angfactor = 1.;		// for angular displacement
-    real areafactor = 1.;		// for area change
-    real rating_threshold = 2.; // (1.)  rating above means that cannot be the same particle
+    posorth_factor=(1/posorth_factor)*dx;
 
 
     // periodic boundary condition or not
@@ -576,18 +554,20 @@ int main(void)
     //updated estimate covariance
     boost::numeric::ublas::matrix<real> updated_p;
 
-
-    // TODO
-    // open output files (also put some headers ?)
     // updated states
-    std::string out_file_s = "updated_states.txt";
+    std::string out_file_s = data_directory + "updated_states.txt";
     std::ofstream out1;
     out1.open(out_file_s);
 
-    // updated error covariance matrices p
-    std::string out_file_p = "updated_error_covariance.txt";
+    // updated error covariance matrices p (just the diagonal)
+    std::string out_file_p = data_directory + "updated_error_covariance.txt";
     std::ofstream out2;
     out2.open(out_file_p);
+
+    // to stop continuing predicting when no obervation available for too much time
+    std::map<int, int> number_pred;
+
+    std::set<int> new_bac;
 
     std::cout << "Initialisation complete." << std::endl;
 
@@ -608,8 +588,14 @@ int main(void)
     	    state_pred_dict[t+1][i.first]=prod(f,i.second);
         }
 
+        //////////////// 3) prediction of error covariance matrices ////////////////
+        for(auto i:p_dict[t]){
+            p_pred=prod(f, i.second);
+            p_pred_dict[t+1][i.first]=prod(p_pred,boost::numeric::ublas::trans(f))+q;
+        }
 
-        //////////////// 3) assignment between predictions and observations, at time t+1 ////////////////
+
+        //////////////// 4) assignment between predictions and observations, at time t+1 ////////////////
         // using minimization of energy function
         // to deal with conflict use the same algorithm as in tracking.cpp (copy code from there)
 
@@ -633,7 +619,7 @@ int main(void)
                 {
                     //map should contain only tracking partners with rating below threshold
                 	// TODO: declare the function somewhere, change the name
-                    real rate = calcKal(t+1, positions, state_pred_dict, angles, sizes, particle, other_particle, L, periodic_boundary_cond, pospara_factor, posorth_factor, angfactor, areafactor);
+                    real rate = calcKal(t+1, positions, state_pred_dict, p_pred_dict, angles, sizes, particle, other_particle, dx, periodic_boundary_cond, pospara_factor, posorth_factor, angfactor, areafactor);
                     if (rate <= rating_threshold)
                     {
                         rates[particle.first][rate] = other_particle;
@@ -641,6 +627,7 @@ int main(void)
                 }
             }
         }
+
 
         // use the computed rates to do assignment between predicted states and observed states, at t+1
         std::multimap<real, std::tuple<uindex, uindex, uindex>> matches;
@@ -657,7 +644,7 @@ int main(void)
 
         std::set<uindex> used_matches;
         std::set<uindex> matched_observations;  // to know what observation were used, to give new identity to the ones that were not used
-
+        std::set<uindex> matched_predictions;  // same for predictions, to continue predicting without updated for those
         bool tracking_changes = true;
         while (tracking_changes) //keep iterating
         {
@@ -706,25 +693,88 @@ int main(void)
             newmatches.clear(); //hm really? ka, apparently this fixes everything (at least something)
         }
 
-        // TODO:
+        for(auto m: matches){
+            auto indice_pred=std::get<0>(m.second);
+            matched_predictions.insert(indice_pred);
+        }
+
+        // when we were doing multiple prediction and now have an observation available, remove the index of the trajectory from the dictionary counting the number of prediction
+        for(auto i: number_pred){
+        	//
+        	if(matched_predictions.find(i.first)!=matched_predictions.end()){
+        	    number_pred.erase(i.first);
+        	}
+
+        }
+
+        // if we assigned a new index to a bacteria and now no observation is available, remove the one time step long trajectory
+
+        for(std::set<int>::iterator it = new_bac.begin(); it != new_bac.end(); ++it){
+        	if(matched_predictions.find(*it)==matched_predictions.end()){
+        		state_updated_dict[t].erase(*it);
+        		p_dict[t].erase(*it);
+
+        	}
+        }
+
 
         // what to do with observation that were not close enough to any prediction ? Say it's a new bacteria ??
+
+        // two last pictures
+        cv::Mat img_1 = cv::imread(data_directory +filenames[t-1], CV_LOAD_IMAGE_GRAYSCALE);
+        cv::Mat img_2 = cv::imread(data_directory +filenames[t], CV_LOAD_IMAGE_GRAYSCALE);
+
+        // use only the subregion we are working on
+        cv::Rect subrect = cv::Rect(subregion_x, subregion_y, dx, dy);
+    	cv::Mat subImage_img_1(img_1, subrect);
+    	img_1=subImage_img_1;
+    	cv::Mat subImage_img_2(img_2, subrect);
+    	img_2=subImage_img_1;
+
+        // histogram equalizer
+        unsigned int winsize=16;   // ?
+        cv::equalizeHist(img_1, norm_1);
+        cv::equalizeHist(img_2, norm_2);
+
+        // compute vector field
+        cv::calcOpticalFlowFarneback(norm_1, norm_2, flow, 0.5, 4, winsize, 3, 5, 1.1, 0);
+
+        //
+        new_bac.clear();
+
         for (unsigned int i=0; i<nextnum; i++){
         	// look if this observation has been assigned to a prediction
             if (matched_observations.find(i)==matched_observations.end()){
-            	// consider it as a new bacteria, put an updated state for it at time t+1
-                state(0,0)=positions[t+1][i].x;
-                state(1,0)=positions[t+1][i].y;
-                state(2,0)=std::cos(angles[t+1][i])*v_mean;
-                state(3,0)=std::sin(angles[t+1][i])*v_mean;
-            	state_updated_dict[t+1][highest_index+1]=state;
-            	// TODO: correct angle using vector field
-        		p_dict[t+1][highest_index+1]=zeros;
-        		p_dict[t+1][highest_index+1](0,0)=initialNoise_x;
-        		p_dict[t+1][highest_index+1](1,0)=initialNoise_y;
-        		p_dict[t+1][highest_index+1](2,0)=initialNoise_vx;
-        		p_dict[t+1][highest_index+1](3,0)=initialNoise_vy;
-            	highest_index++;
+	    	    //if(t<10 || !(positions[t+1][i].x>edge_region*DX && positions[t+1][i].x<DX-edge_region*DX && positions[t+1][i].y>edge_region*DY && positions[t+1][i].y<DY-edge_region*DY)){
+                	new_bac.insert(highest_index+1);
+                	// consider it as a new bacteria, put an updated state for it at time t+1
+                    state(0,0)=positions[t+1][i].x;
+                    state(1,0)=positions[t+1][i].y;
+                    state(2,0)=std::cos(angles[t+1][i])*v_mean;
+                    state(3,0)=std::sin(angles[t+1][i])*v_mean;
+                    // correct the orientation (because +/- pi) by comparing with the vector field
+                    // use code from opticalflow.cpp
+
+                    // do correction
+            	    const cv::Point2f& fxy=flow.at<cv::Point2f>(state(0,0), state(1,0));
+            	    // angle of this vector
+                    angle_flow=atan2(fxy.x,fxy.y);
+                    angle_dif=angles[t+1][i]-angle_flow;
+                    // when absolute difference is more than 90°, correct the vx and vy in the dictionary for updated states at time t=1
+                    if ((angle_dif> PI/2 && angle_dif< 3*PI/2) || angle_dif<-PI/2){
+                    	state(2,0)*= -1;
+                	    state(3,0)*= -1;
+                    }
+
+            	    state_updated_dict[t+1][highest_index+1]=state;
+            	    // TODO: correct angle using vector field ? or not ? (if do it change the energy function to have different computation of ange costs)
+        		    p_dict[t+1][highest_index+1]=zeros;
+        		    p_dict[t+1][highest_index+1](0,0)=initialNoise_x;
+        		    p_dict[t+1][highest_index+1](1,1)=initialNoise_y;
+        		    p_dict[t+1][highest_index+1](2,2)=initialNoise_vx;
+        		    p_dict[t+1][highest_index+1](3,3)=initialNoise_vy;
+            	    highest_index++;
+	    	    //}
 
             }
         }
@@ -732,26 +782,19 @@ int main(void)
 
 
 
-
-        //////////////// 4) prediction of error covariance matrices ////////////////
-        for(auto i:p_dict[t]){
-            p_pred=prod(f, i.second);
-            p_pred_dict[t+1][i.first]=prod(p_pred,boost::numeric::ublas::trans(f))+q;
-        }
-
         ////////////////// 5) correction of predicted state and of predicted error covariance matrices////////////////
 
-        // (idea: could we use the values of the energy function to help estimating confidence ?)
 
-        //output time in ouput files
-        out1<<t+1<<" ";
-        out2<<t+1<<" ";
+        std::cout<<"Number of match: "<<matches.size()<<std::endl;
 
         for(auto m: matches){
+
             auto indice_pred=std::get<0>(m.second);
             auto indice_obs=std::get<1>(m.second);
 
-            // observed state at tindice_pred+1
+
+
+            // observed state at indice_pred+1
             z(0,0)=positions[t+1][indice_obs].x;
             z(1,0)=positions[t+1][indice_obs].y;
             // estimate "observed" velocity
@@ -787,87 +830,56 @@ int main(void)
             state_updated_dict[t+1][indice_pred]=updated_x;
             p_dict[t+1][indice_pred]=updated_p;
 
-            //output
-            out1<<indice_pred<<" ";
-            out1<<updated_x(0,0)<<" "<<updated_x(1,0)<<" "<<updated_x(2,0)<<" "<<updated_x(3,0)<<" ";
-
-            out2<<updated_p(0,0)<<" "<<updated_p(1,1)<<" "<<updated_p(2,2)<<" "<<updated_p(3,3)<<" ";
         }
-        out1<<std::endl;
-        out2<<std::endl;
+
+
+        // for the predictions that don't have any matching observation, continue predicting (only if number of steps below threshold)
+        // when don't find any matching observation, remove the trajectory
+        if(multiple_pred){
+            for(auto i: state_pred_dict[t+1]){
+    	        if(matched_predictions.find(i.first)==matched_predictions.end()){
+    	    	    // only if not on an edge region
+    	    	    if(i.second(0,0)>edge_region*dx && i.second(0,0)<dx-edge_region*dx && i.second(1,0)>edge_region*dy && i.second(1,0)<dy-edge_region*dy){
+    	    		    if(number_pred.find(i.first)==number_pred.end()){
+        	    		    number_pred[i.first]=1;
+    	    		    }
+    	    		    if(number_pred[i.first]==multiple_pred_threshold+1){
+    	    		    	//remove trajectory
+    	    		    	for (unsigned int j=t+1-multiple_pred_threshold; j<=t+1; j++){
+    	    		    	    state_updated_dict[j].erase(i.first);
+    	    		    	    // erase also covariance
+    	    		    	    p_dict[j].erase(i.first);
+    	    		    	}
+
+    	    		    }
+    	    		    if(number_pred[i.first]<=multiple_pred_threshold){
+            	    	    // put directly predicted state and predicted error covariance without updating in the dictionaries for updated stuff
+            		        state_updated_dict[t+1][i.first]=i.second;
+    	        	        p_dict[t+1][i.first]=p_pred_dict[t+1][i.first];
+    	        	        number_pred[i.first]++;
+
+    	    		    }
+    	    	    }
+        	    }
+            }
+        }
+
+        // output
+        if(t>multiple_pred_threshold){
+        	for(auto i:state_updated_dict[t-multiple_pred_threshold]){
+        		out1<< t-multiple_pred_threshold<< " "<<i.first<< " "<< i.second(0,0)<< " "<< i.second(1,0)<< " "<< i.second(2,0)<< " "<< i.second(3,0)<< std::endl;
+        		out2<< t-multiple_pred_threshold<< " "<<i.first<< " "<< p_dict[t-multiple_pred_threshold][i.first](0,0)<< " "<< p_dict[t-multiple_pred_threshold][i.first](1,1)<< " "<< p_dict[t-multiple_pred_threshold][i.first](2,2)<< " "<< p_dict[t-multiple_pred_threshold][i.first](3,3)<<std::endl;
+        	}
+        	state_updated_dict.erase(t-multiple_pred_threshold);
+        	p_dict.erase(t-multiple_pred_threshold);
+        }
 
     }
 
-    // TODO:
     ////////////////// 6) output ////////////////
 
     out1.close(); // output for updated predicted states
-    out2.close(); // output for error covariance matrices
-
-    ////////////////// 7) visualization of results ////////////////
-
-
-    // for each time step, plot the updated position of the bacteria on the original picture
-    // keep the same color for the same bacteria over multiple frames
-
-    cv::Mat original;
-    cv::Point bac;    // contains coordinate x and y of the point
-    cv::Scalar col;   //color of the point (blue, yellow, red)
-
-    // TODO: take that as argument or sth
-    std::string FILENAMETPL = "img_%09d_00-BF_EGFP_000.tif";
-	int START = 0;
-	int STOP = 10;
-    std::vector<std::string> filenames = CreateFilenameList(FILENAMETPL.c_str(), START, STOP);
-
-    std::string output_name; // name of an output file
-
-    // assign a different random blue, yellow and red amount to each bacteria identity, keep it in vectors
-	srand(1); //seed for random choice of the color
-	std::vector<int> bleu, jaune, rouge;
-	for (int i=0; i<highest_index; i++){
-		bleu.push_back(rand()%200);
-	}
-	for (int i=0; i<highest_index; i++){
-		jaune.push_back(rand()%200);
-	}
-	for (int i=0; i<highest_index; i++){
-		rouge.push_back(rand()%200);
-	}
-
-    real x_cov, y_cov;
-    cv::Size axes;
-    double angle=0, startAngle=0, endAngle=359;
-	for(unsigned int t:times){
-		// import the original picture
-		original= cv::imread(filenames[t-1]);
-		// keep only the part we worked on
-		cv::Mat subImage(original, subrect);
-		original=subImage;
-		for(auto i: state_updated_dict[t]){
-			// color
-	    	col[0]=bleu[i.first];
-	    	col[1]=jaune[i.first];
-	    	col[2]=rouge[i.first];
-	    	// coordinate x and y of the point
-	    	bac=cv::Point(i.second(0,0), DY-i.second(1,0));
-	    	// make the point
-	        cv::circle(original, bac, 2, col, -1);
-	        // plot covariance for x and y -> ellipse
-	        x_cov=p_dict[t][i.first](0,0);
-	        y_cov=p_dict[t][i.first](1,1);
-            axes=cv::Size(x_cov, y_cov);
-	        cv::ellipse(original, bac, axes, angle, startAngle, endAngle, col);
-
-	    }
-	    output_name="pred_"+filenames[t-1];
-	    cv::imwrite(output_name, original);
-	}
-
-
-	// try following one bacteria and plot the error covariance each time
-
-
+    out2.close(); // output for error covariance matrices (just output the diagonal)
 
     std::cout << "Evaluation complete." << std::endl;
 
@@ -878,7 +890,6 @@ int main(void)
 // class for matrices/ not everything in the main
 // not store everything for every timestep
 // no need for the time vector
-// put arguments in configuration file
 // store reference to map elements and dont access the map 1000000000000000000 times
 
 

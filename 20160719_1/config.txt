@@ -1,0 +1,63 @@
+// careful: the order matters
+
+// To define just a subregion of the pictures
+0 // X
+0 // Y
+512 // DX
+512 // DY
+
+// Do we plot covariance ellipses around updated predicted positions? plot_cov (bool)
+false
+
+// which frames are we using
+1    // time_start
+100  // time_stop
+1    // time_step
+
+// subdirectory where we put the data ("data_exp.txt" and "data_len.txt" ) and where will be the output: DATA_DIRECTORY
+20160719_1/
+
+// names of original pictures (we need them to compute vector fields to correct angles, and for visualization of the results): FILENAMETPL
+//img_%09d_01-BF0_000.tif
+%05d_Normalized.png
+
+// in_file: contains x and y positions for each box, and angle of orientation (in radians, +/- pi) and that for each frame
+data_exp.txt
+
+// in_file2 contains length and width of each box, and that for each frame
+data_len.txt
+
+0 // v_mean: mean velocity
+1   // delta_t: time difference between 2 consecutive frames, what is it? say 1 (time in unit of delta t)
+
+// observe_vel : do we observe velocity (bool)
+true
+
+// initialize error covariance matrices P
+0.01 // initialNoise_x
+0.01 // initialNoise_y
+0.01 // initialNoise_vx
+0.01 // initialNoise_vy
+
+
+5.5 // weight_q_pos: covariance of position process noise // values from kalman_parameter.cpp
+2.3 // weight_q_vel: covariance of velocity process noise
+3   // weight_rcovariance of observation noise
+
+0.O5 // edge_region: proportion of the edge considered as edge (eg if edge=0.1 and L=10, we take a band of width 1 all around which is the edge)
+// weight coefficients for energy function (used to do the assignment between predictions and observations)
+0.25 // real angfactor: for angular displacement
+0 // real areafactor: for area change
+2 // real rating_threshold (1.): rating above means that cannot be the same particle
+
+// print_index: bool for if we want to print indinces next to bacteria
+true
+
+5 // multiple_pred_threshold: maximum number of multiple prediction
+
+// multiple prediction ?
+true
+
+10 // width_min: minimum width for a rectangle from the segmentation to be considered as a bacteria
+
+2 // input_kind: for visualisation of the results, (1: use as input output of tracking.cpp, 2: use as input output of kalman.cpp)

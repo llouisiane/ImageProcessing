@@ -150,8 +150,8 @@ real rate_match(Vector pos1, Vector pos2, real ang1, real ang2, Vector size1, Ve
     }
 
     //real posrating = posfactor * com_distance / (sqrt2*L); //sqrt2 is not important
-    real pospara_rating = pospara_factor * std::get<0>(com_distance) / L;
-    real posorth_rating = posorth_factor * std::get<1>(com_distance) / L;
+    real pospara_rating = pospara_factor * std::get<0>(com_distance) / dx;
+    real posorth_rating = posorth_factor * std::get<1>(com_distance) / dx;
 
     //real angabsdiff = std::abs(ang1-ang2);
     //real angrating = angfactor * std::min(angabsdiff, PI - angabsdiff) / PI; //CAN BE NEGATIVE; FIX

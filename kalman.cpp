@@ -1,9 +1,11 @@
-// 2016-06
-// Louisiane Lemaire
-// inspired from tracking.cpp (https://github.com/SwarmingSoft/ImageProcessing)
-
-/* HOW TO USE
- * This code performs the tracking of bacteria trajectories over multiple time steps, using a Kalman filter.
+/**
+ * @file   kalman.cpp
+ * @author Louisiane Lemaire
+ * @see inspired from tracking.cpp https://github.com/SwarmingSoft/ImageProcessing
+ * @date   2016-08
+ *
+ * @brief  This code performs the tracking of bacteria trajectories over multiple time steps, using a Kalman filter.
+ *
  * It uses as input the output from the segmentation code that fit rectangles around bacteria on pictures at each time step:
  *
  * data_len.txt contains for each time step the length and the width of each fitted rectangle
@@ -28,7 +30,6 @@
  * updated_error_covariance.txt, contains for each time step the index and the diagonal of the updated covariance matrix of each tracked bacteria
  * time id cov_x cov_y cov_vx cov_vy
  *...
- *
  */
 
 // because we need a lot of matrix operations in this code, we use boost (www.boost.org/doc/libs/1_61_0/libs/numeric/ublas/doc/)

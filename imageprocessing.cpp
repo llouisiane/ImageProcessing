@@ -583,23 +583,23 @@ std::vector<std::string> CreateFilenameList(const char *tpl, unsigned int start,
 
 int main(int argc, char **argv)
 {
-    if (argc != 10)
-    {
-        std::cerr << "inpath(string)\tfilenametpl(string)\tstart(int)\tstop(int)\tX\tY\tDX\tDY\toutpath(string)" << std::endl;
-        throw std::runtime_error("Parameters missing");
-    }
+//    if (argc != 10)
+//    {
+//        std::cerr << "inpath(string)\tfilenametpl(string)\tstart(int)\tstop(int)\tX\tY\tDX\tDY\toutpath(string)" << std::endl;
+//        throw std::runtime_error("Parameters missing");
+//    }
 
-    std::string INPATH = argv[1]; // path with trailing slash
-    std::string FILENAMETPL = argv[2]; // "img_%09d_00-BF_EGFP_000.tif"
-    int START = std::atoi(argv[3]); // 0
-    int STOP = std::atoi(argv[4]); // 1000
-    int X = std::atoi(argv[5]); //512
-    int Y = std::atoi(argv[6]); //325
-    int DX = std::atoi(argv[7]); //512
-    int DY = std::atoi(argv[8]); //512
-    std::string OUTPATH = argv[9]; // path with trailing slash
-
-    std::vector<std::string> filenames = CreateFilenameList(FILENAMETPL.c_str(), START, STOP);
+	std::string INPATH = std::string("/Users/nikita/Documents/spr/20160809/100x_10BF_4um_100/Pos0/");argv[1]; // path with trailing slash
+	std::string FILENAMETPL = std::string("img_%09d_01-BF0_000.tif");argv[2]; // "img_%09d_00-BF_EGFP_000.tif"
+	int START = 0;std::atoi(argv[3]); // 0
+	int STOP = 15;std::atoi(argv[4]); // 1000
+	int X = 0;512;std::atoi(argv[5]); //512
+	int Y = 575;325;std::atoi(argv[6]); //325
+	int DX = 1024;std::atoi(argv[7]); //512
+	int DY = 1024;std::atoi(argv[8]); //512
+	std::string OUTPATH = std::string("/Users/nikita/Documents/spr/20160809/100x_10BF_4um_100/Pos0_output/");argv[9]; // path with trailing slash
+	
+	std::vector<std::string> filenames = CreateFilenameList(FILENAMETPL.c_str(), START, STOP);
 
     cv::Rect subrect = cv::Rect(X, Y, DX, DY);
 
@@ -630,22 +630,22 @@ int main(int argc, char **argv)
     cv::waitKey();
 }*/
 
-    //parameters for finding the rectangles //1 20 1 0.08 2 2 //1 30 1 0.12 2 2
-    int width = 2; //3; //5; //of test rectangle >=1
-    int height = 24; //40; //80; //of test rectangle =>1
-    real delta_angle = 1; //1.; //20.; //1.; //rotation of rectangle >0, <180 // in degree
-    real ignore_ratio = 0.026; //0.00; //0.015; //maximum area error in binary picture <=1, >=0
-    int delta_x = 1; //2; //1; //translation of rectangle in x >=1
-    int delta_y = 1; //2; //1; //translation of rectangle in y >=1
-    //parameters for rectangle grouping in contours
-    real max_allowed_angle_diff = 2.; //18.; //in degree
-    real max_allowed_center_diff_factor = 0.6; // 1.2; //factor of "height"
-    real max_allowed_perp_center_diff_factor = 0.4; // 8.; //factor of "width"
-    //parameters for filtering out additional overlapping rects in some contour
-    real max_area_overlapp = 0.52; // 0.7; //factor of area of smaller of 2 compared rects
-    //GroupParticles has 2-modes (a, b) where a is better but slower and needs more tweaking (mainly overlapp parameter)
-
-    cv::Mat original, grey, normalized, blurred, subtracted, subtracted_normalized, edge_detected, binary, dilatederoded;
+	//parameters for finding the rectangles //1 20 1 0.08 2 2 //1 30 1 0.12 2 2
+	int width = 10;2; //3; //5; //of test rectangle >=1
+	int height = 50; //40; //80; //of test rectangle =>1
+	real delta_angle = 1; //1.; //20.; //1.; //rotation of rectangle >0, <180 // in degree
+	real ignore_ratio = 0.026; //0.00; //0.015; //maximum area error in binary picture <=1, >=0
+	int delta_x = 1; //2; //1; //translation of rectangle in x >=1
+	int delta_y = 1; //2; //1; //translation of rectangle in y >=1
+	//parameters for rectangle grouping in contours
+	real max_allowed_angle_diff = 2.; //18.; //in degree
+	real max_allowed_center_diff_factor = 0.6; // 1.2; //factor of "height"
+	real max_allowed_perp_center_diff_factor = 0.4; // 8.; //factor of "width"
+	//parameters for filtering out additional overlapping rects in some contour
+	real max_area_overlapp = 0.52; // 0.7; //factor of area of smaller of 2 compared rects
+	//GroupParticles has 2-modes (a, b) where a is better but slower and needs more tweaking (mainly overlapp parameter)
+	
+	cv::Mat original, grey, normalized, blurred, subtracted, subtracted_normalized, edge_detected, binary, dilatederoded;
 
     //cv::Rect subrect(360,  90, 512, 512); // subrect(512, 325, 512, 512) for 60x_1.0_BF_2016_01_27_2, subrect(380, 150, 512, 512) for 60x_1.0_BF_2016_01_27_4, subrect(360,  90, 512, 512) for 60x_1.0_BF_2016_01_27_6
     bool invert_from_binary_onwards = false;

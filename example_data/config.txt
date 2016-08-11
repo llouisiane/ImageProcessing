@@ -8,9 +8,9 @@
 example_data/
 // output files from segmentation= input files of tracking:
 // for each frame contains x and y positions of each rectangle, and angles of orientation (in radians modulo pi): positions_angles_data
-data_exp2.txt
+data_exp.txt
 // for each frame contains length and width of each rectangle: length_width_data
-data_len2.txt
+data_len.txt
 // names of original pictures (we need them to compute vector fields to correct angles (we have them only modulo pi), and for visualization of the results): pictures_filename_tpl
 img_%09d_01-BF0_000.tif
 // names of processed pictures (histogram equalization, etc.)

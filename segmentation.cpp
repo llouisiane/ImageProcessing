@@ -871,9 +871,9 @@ int main(int argc, char **argv)
     cv::Rect subrect = cv::Rect(X, Y, DX, DY);
 
     std::ofstream out, out_len, out_params;
-    out.open(OUTPATH + "data_exp2.txt");
-    out_len.open(OUTPATH + "data_len2.txt");
-    out_params.open(OUTPATH + "data_params2.txt");
+    out.open(OUTPATH + "data_exp.txt");
+    out_len.open(OUTPATH + "data_len.txt");
+    out_params.open(OUTPATH + "data_params.txt");
 
 /*for (real anglee = 0.; anglee < 360.; anglee+=1.)
 {

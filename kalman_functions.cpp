@@ -55,90 +55,127 @@ configuration_parameters_t read_parameters(std::string conf_file) {
 			case 4:
 				result.pictures_filename_tpl = line.c_str();
 				break;
-
 			case 5:
+				result.processed_pictures_filename_tpl = line.c_str();
+
+			case 6:
 				result.subregion_x = atoi(line.c_str());
 				break;
-			case 6:
+			case 7:
 				result.subregion_y = atoi(line.c_str());
 				break;
-			case 7:
+			case 8:
 				result.dx = atoi(line.c_str());
 				break;
-			case 8:
+			case 9:
 				result.dy = atoi(line.c_str());
 				break;
 
-			case 9:
+			case 10:
 				result.time_start = atoi(line.c_str());
 				break;
-			case 10:
+			case 11:
 				result.time_stop = atoi(line.c_str());
 				break;
-			case 11:
+			case 12:
 				result.time_step = atoi(line.c_str());
 				break;
 
-			case 12:
-				result.width_min = atof(line.c_str());
-				break;
-
 			case 13:
-				result.v_init = atof(line.c_str());
+				result.seg_width = atoi(line.c_str());
 				break;
 			case 14:
-				result.initial_noise_x = atof(line.c_str());
+				result.seg_length = atoi(line.c_str());
 				break;
 			case 15:
-				result.initial_noise_y = atof(line.c_str());
+				result.seg_delta_angle = atof(line.c_str());
 				break;
 			case 16:
-				result.initial_noise_vx = atof(line.c_str());
+				result.seg_ignore_ratio = atof(line.c_str());
 				break;
 			case 17:
-				result.initial_noise_vy = atof(line.c_str());
+				result.seg_delta_x = atoi(line.c_str());
 				break;
-
 			case 18:
-				result.observe_velocity = string2bool(line.c_str());
+				result.seg_delta_y = atoi(line.c_str());
 				break;
 
 			case 19:
-				result.weight_q_pos = atof(line.c_str());
+				result.seg_max_allowed_angle_diff = atof(line.c_str());
 				break;
 			case 20:
-				result.weight_q_vel = atof(line.c_str());
+				result.seg_max_allowed_center_diff_factor = atof(line.c_str());
 				break;
 			case 21:
-				result.weight_r_pos = atof(line.c_str());
+				result.seg_max_allowed_perp_center_diff_factor = atof(line.c_str());
 				break;
 			case 22:
-				result.weight_r_vel = atof(line.c_str());
+				result.seg_max_area_overlapp = atof(line.c_str());
 				break;
 
 			case 23:
+				result.width_min = atof(line.c_str());
+				break;
+			case 24:
+				result.length_min = atof(line.c_str());
+				break;
+
+			case 25:
+				result.v_init = atof(line.c_str());
+				break;
+			case 26:
+				result.initial_noise_x = atof(line.c_str());
+				break;
+			case 27:
+				result.initial_noise_y = atof(line.c_str());
+				break;
+			case 28:
+				result.initial_noise_vx = atof(line.c_str());
+				break;
+			case 29:
+				result.initial_noise_vy = atof(line.c_str());
+				break;
+
+			case 30:
+				result.observe_velocity = string2bool(line.c_str());
+				break;
+
+			case 31:
+				result.weight_q_pos = atof(line.c_str());
+				break;
+			case 32:
+				result.weight_q_vel = atof(line.c_str());
+				break;
+			case 33:
+				result.weight_r_pos = atof(line.c_str());
+				break;
+			case 34:
+				result.weight_r_vel = atof(line.c_str());
+				break;
+
+			case 35:
 				result.edge_region = atof(line.c_str());
 				break;
 
-			case 24:
+			case 36:
 				result.angfactor = atof(line.c_str());
 				break;
-			case 25:
+			case 37:
 				result.rating_threshold = atof(line.c_str());
 				break;
 
-			case 26:
+			case 38:
 				result.multiple_pred_threshold = atoi(line.c_str());
 				break;
 
-			case 27:
+			case 39:
 				result.print_index = string2bool(line.c_str());
 				break;
-			case 28:
+			case 40:
 				result.plot_cov = string2bool(line.c_str());
 				break;
 
-			case 29:
+			case 41:
 				result.input_kind = atoi(line.c_str());
 				break;
 
@@ -151,6 +188,7 @@ configuration_parameters_t read_parameters(std::string conf_file) {
 	}
 	return result;
 }
+
 
 void read_data_len(std::string filename, size_dict_t &sizes, int time_start, int time_stop, int time_step) {
 	std::ifstream in;

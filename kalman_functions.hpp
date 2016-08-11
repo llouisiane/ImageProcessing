@@ -51,6 +51,8 @@ typedef struct {
 	std::string length_width_data;
 	// names of original pictures (we need them to compute vector fields to correct angles (we have them only modulo pi), and for visualization of the results)
 	std::string pictures_filename_tpl;
+	// names of processed pictures (histogram equalisation, etc.)
+	std::string processed_pictures_filename_tpl;
 
 	// defines the part of the images that we are using (has to be the same as in imageprocessing.cpp) // TODO: make so that imageproc; take it from here
 	int subregion_x;
@@ -61,10 +63,26 @@ typedef struct {
 	// to define which frames we want to use
 	int time_start;
 	int time_stop;
-	int time_step; // TODO: try when we use not 1
+	int time_step;
 
-	// minimum width for a rectangle from segmentation to be considered as an observation (enables to detect some false positive)
-	double width_min;
+	// segmentation parameters
+	int seg_width; // width of the test rectangles
+	int seg_length; // height of the test rectangles
+	double seg_delta_angle; // rotation of angle (in degree)
+	double seg_ignore_ratio; // maximum area error in binary picture
+	int seg_delta_x; // translation of rectangle in x
+	int seg_delta_y; // translation of rectangle in y
+
+	//parameters for rectangle grouping in contours
+	double seg_max_allowed_angle_diff; // maximum allowed angle difference (in degree)
+	double seg_max_allowed_center_diff_factor; // factor of "length"
+	double seg_max_allowed_perp_center_diff_factor; // factor of "width"
+
+	//parameters for filtering out additional overlapping rects in some contour
+	double seg_max_area_overlapp; // factor of area of smaller of 2 compared rects
+
+	double width_min; // minimum width for a rectangle from segmentation to be considered as an observation (enables to detect some false positive)
+    double length_min; // minimum length for a rectangle from segmentation to be considered as an observation (enables to detect some false positive)
 
 	// initial velocity
 	double v_init;

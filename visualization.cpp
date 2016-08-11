@@ -1,5 +1,5 @@
 /**
- * @file   kalman.cpp
+ * @file   visualisation.cpp
  * @author Louisiane Lemaire
  * @date   2016-08
  *
@@ -112,7 +112,7 @@ int main(int argc, char **argv) {
 	params = read_parameters(string(argv[1]) + "/config.txt");
 
 	// names of the original pictures, we will plot on them the updated position estimates
-	vector<string> filenames = create_filename_list(params.pictures_filename_tpl.c_str(), params.time_start, params.time_stop);
+	vector<string> filenames = create_filename_list(params.processed_pictures_filename_tpl.c_str(), params.time_start, params.time_stop);
 
 
 	int highest_id; // highest index over all bacteria and all time_step

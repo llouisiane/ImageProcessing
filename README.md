@@ -1,8 +1,7 @@
 # ImageProcessing
 
-Dependencies:
-
 C++
+Dependencies:
 - [OpenCV](http://opencv.org)
 - [Boost](http://www.boost.org/)
 
@@ -26,10 +25,4 @@ Enables to visualize the results (visualization.cpp)
 - use parameters from configuration file config.txt, command line argument: path of the configuration file
 - input: preprocessed pictures, updated_states.txt, updated_error_covariance.txt
 - output: trajectories plotted on preprocessed images (pred_ORIGINAL_NAME)
-
-## step-by-step instructions for setting up OpenCV for imageProcessing
-Linux:
-- follow one of the guides, eg. [here](http://docs.opencv.org/3.1.0/d7/d9f/tutorial_linux_install.html)
-- you have to include the shared library files (*.so) from the `bin` folder of the build to the PATH variable or copy them next to executable
-- you have to change the "search directories" and "linker settings" in codeblocks (`Project -> Build options -> Search directories / Linker settings`) to accommodate for your file structure (and possibly add search directories and some `-lopencv_` type 'Other linker options')
 

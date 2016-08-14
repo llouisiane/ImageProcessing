@@ -4,7 +4,7 @@
 C++
 
 Dependencies:
-- [OpenCV](http://opencv.org)
+- [OpenCV v3](http://opencv.org)
 - [Boost](http://www.boost.org/)
 
 
@@ -27,4 +27,8 @@ Enables to visualize the results (visualization.cpp)
 - use parameters from configuration file config.txt, command line argument: path of the configuration file
 - input: preprocessed pictures, updated_states.txt, updated_error_covariance.txt
 - output: trajectories plotted on preprocessed images (pred_ORIGINAL_NAME)
+
+## compile instructions
+- There is a makefile in each build folder
+- You may have to adapt the opencv paths in the makefiles
 

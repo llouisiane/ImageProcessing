@@ -1,13 +1,18 @@
-# Makefile for segmentation
+# Makefile for kalman
 
 PROG_NAME := kalman
 OBJS += ./kalman.o ./kalman_functions.o 
 
 LIBS := -lopencv_core -lopencv_imgproc -lopencv_highgui -lopencv_imgcodecs -lboost_system -lopencv_video
 
-LIB_DIR := /usr/local/lib
-OPENCV_DIR := /usr/local/include/opencv
-OPENCV2_DIR := /usr/local/include/opencv2
+
+OPENCV_LIB_DIRS := -L/usr/local/lib
+OPENCV_INCLUDES := -I/usr/local/include/opencv
+OPENCV2_INCLUDES := -I/usr/local/include/opencv2
+
+OPENCV_LIB_DIRS += $(shell pkg-config --libs-only-L opencv)
+OPENCV_INCLUDES += $(shell pkg-config --cflags opencv)
+OPENCV2_INCLUDES += $(shell pkg-config --cflags opencv | sed -e 's/opencv/opencv2/g')
 
 RM := rm -rf
 
@@ -18,14 +23,14 @@ all: $(PROG_NAME)
 $(PROG_NAME): $(OBJS)
 	@echo 'Building target: $@'
 	@echo 'Invoking: GCC C++ Linker'
-	g++ -L$(LIB_DIR) -o $(PROG_NAME) $(OBJS) $(LIBS)
+	g++ $(OPENCV_LIB_DIRS) -o $(PROG_NAME) $(OBJS) $(LIBS)
 	@echo 'Finished building target: $@'
 	@echo ' '
 
 %.o: ../%.cpp
 	@echo 'Building file: $<'
 	@echo 'Invoking: GCC C++ Compiler'
-	g++ -std=c++14 -I$(OPENCV_DIR) -I$(OPENCV2_DIR) -O0 -g3 -Wall -c -fmessage-length=0 -MMD -MP -MF"$(@:%.o=%.d)" -MT"$(@)" -o "$@" "$<"
+	g++ -std=c++14 $(OPENCV_INCLUDES) $(OPENCV2_INCLUDES) -O0 -g3 -Wall -c -fmessage-length=0 -MMD -MP -MF"$(@:%.o=%.d)" -MT"$(@)" -o "$@" "$<"
 	@echo 'Finished building: $<'
 	@echo ' '
 

@@ -11,3 +11,8 @@ opencv/
 Debug/
 *.txt
 pred*.tif
+*.o
+*.d
+build_segmentation/segmentation
+build_kalman/kalman
+build_visualization/visualization

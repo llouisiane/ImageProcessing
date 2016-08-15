@@ -88,7 +88,7 @@ int main(int argc, char **argv) {
 
 	// names of the original pictures
 	//(those pictures are needed to compute the motion flow vector field to correct the angle values from the segmentation that are only given modulo pi)
-	vector<string> filenames = create_filename_list(params.pictures_filename_tpl.c_str(), params.time_start, params.time_stop);
+	vector<string> filenames = create_filename_list(params.processed_pictures_filename_tpl.c_str(), params.time_start, params.time_stop);
 
 
 	/* Initialize predicted states and error covariance matrices, declare predicted states and error covariance matrices */
@@ -295,7 +295,7 @@ int main(int argc, char **argv) {
 			}
 		}
 		// indices of the new bacteria at one time step, to remove the one time step trajectory if we can't find a match at the next time step
-		set<int> new_bac;
+		new_bac.clear();
 		// put observed values in dictionary for updated steps at time t+time_step, correct the angles
 		add_new_bacteria(t + params.time_step, pos_indices, positions, angles, updated_state_dict, updated_p_dict, highest_index, filenames, params, new_bac);
 

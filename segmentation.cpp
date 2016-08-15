@@ -833,7 +833,7 @@ std::vector<std::string> CreateFilenameList(const char *tpl, unsigned int start,
     char buffer[64];
     std::vector<std::string> ret;
 
-    for (unsigned int i = start; i < stop; ++i)
+    for (unsigned int i = start; i <= stop; ++i)
     {
         snprintf(buffer, 64, tpl, i);
         ret.push_back(std::string(buffer));

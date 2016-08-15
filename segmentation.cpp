@@ -935,7 +935,7 @@ int main(int argc, char **argv)
     << "invert = " << invert_from_binary_onwards << std::endl;
     out_params.close();
 
-    unsigned int imagenum = 0;
+    unsigned int imagenum = params.time_start;
     for (std::string filename : filenames)
     {
         std::stringstream ss;

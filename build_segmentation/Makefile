@@ -9,9 +9,9 @@ OPENCV_LIB_DIRS := -L/usr/local/lib
 OPENCV_INCLUDES := -I/usr/local/include/opencv
 OPENCV2_INCLUDES := -I/usr/local/include/opencv2
 
-OPENCV_LIB_DIRS += $(shell pkg-config --libs-only-L opencv)
-OPENCV_INCLUDES += $(shell pkg-config --cflags opencv)
-OPENCV2_INCLUDES += $(shell pkg-config --cflags opencv | sed -e 's/opencv/opencv2/g')
+OPENCV_LIB_DIRS += $(shell pkg-config --libs-only-L opencv 2> /dev/null)
+OPENCV_INCLUDES += $(shell pkg-config --cflags opencv 2> /dev/null)
+OPENCV2_INCLUDES += $(shell echo $(OPENCV_INCLUDES) | sed -e 's/opencv/opencv2/g')
 
 RM := rm -rf
 
